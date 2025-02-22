@@ -8,6 +8,7 @@ An implementation of an online adaptive deep neural network with residual connec
 - [Features](#features)
 - [Architecture](#architecture)
 - [Configuration](#configuration)
+- [Usage](#usage)
 - [License](#license)
 - [Contact](#contact)
 
@@ -79,6 +80,19 @@ The project is driven by a JSON configuration file (`config.json`) that specifie
   - `forgetting_factor`: Parameter controlling the rate at which past information is “forgotten” during online learning.
 
 You can modify these parameters to experiment with different simulation settings and network architectures.
+
+## Usage
+
+To run the simulation and begin online adaptive learning, execute the main script:
+
+```bash
+python main.py
+```
+This will:
+- Initialize the system dynamics and network with the parameters specified in config.json.
+- Start the simulation loop where the system state is updated at each time step.
+- Adapt the neural network weights in an online manner.
+- Log data via the data manager and update visualizations in real time using the plotter.
 
 ## License
 
