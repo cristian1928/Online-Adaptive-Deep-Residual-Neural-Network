@@ -16,9 +16,6 @@ class NeuralNetwork:
         self.num_outputs = config['num_outputs']
         self.weight_bounds = config['weight_bounds']        
         self.initialize_weights()
-        #self.weights = np.array([-0.9,-0.8,-0.7,-0.6,-0.5,-0.4,-0.3,-0.2,-0.1,0.0,0.1,0.2,0.3,0.4,0.5,0.6,0.7,0.8,0.9,0.8,0.7,0.6,0.5,0.4,0.3,0.2,0.1,0.0,-0.1,-0.2,-0.3,-0.4,-0.5,-0.6,-0.7,-0.8,\
-        #                         0.2,-0.8,-0.7,-0.6,-0.5,-0.4,-0.3,-0.2,-0.1,0.0,0.1,-0.9,0.4,0.4,0.5,0.6,0.7,0.8,0.9,0.8,0.7,0.6,0.5,0.3,-0.8,0.2,0.1,0.0,-0.1,-0.2,-0.3,-0.4,-0.5,-0.6,-0.7,0.3,\
-        #                            0.3,-0.8,-0.7,-0.6,-0.5,-0.4,-0.3,-0.2,-0.1,0.0,0.1,-0.8,0.5,0.4,0.5,0.6,0.7,0.8,0.9,0.8,0.7,0.6,0.5,0.4,-0.7,0.2,0.1,0.0,-0.1,-0.2,-0.3,-0.4,-0.5,-0.6,-0.7,0.4]).reshape(-1,1)
         self.neural_network_gradient_wrt_weights = None
         self.learning_rate = config['learning_rate'] * np.eye(np.size(self.weights))
 
@@ -40,7 +37,6 @@ class NeuralNetwork:
     
     def get_input_with_bias(self, step): 
         return np.append(self.input_func(step), 1).reshape(-1, 1)
-        #return np.array([0.6, -0.6, 0.8, 1.0]).reshape(-1, 1)
 
     def construct_transposed_weight_matrices(self, weight_index):
         weight_matrices = []
@@ -64,32 +60,47 @@ class NeuralNetwork:
                 activated_layers.append(self.apply_activation_function_and_bias(unactivated_output, activation_function))
         return activated_layers, unactivated_layers
 
-    def perform_backward_propagation(self, activated_layers, unactivated_layers, transposed_weight_matrices, block_index):
+    def perform_backward_propagation(self, activated_layers, unactivated_layers, transposed_weight_matrices, outer_product=None):
         gradient, product = None, None
         for layer_index in range(self.num_layers, -1, -1):
             transposed_output = activated_layers[layer_index].T
             if layer_index == self.num_layers:
                 gradient = np.kron(np.eye(self.num_outputs), transposed_output)
+                if outer_product is not None: gradient = outer_product @ gradient
                 product = transposed_weight_matrices[layer_index] @ self.apply_activation_function_derivative_and_bias(unactivated_layers[layer_index - 1], self.outer_layer_activation_function)
             else:
-                gradient = np.hstack((product @ np.kron(np.eye(self.num_neurons), transposed_output), gradient))
-                if layer_index != 0: 
-                    product = product @ transposed_weight_matrices[layer_index] @ self.apply_activation_function_derivative_and_bias(unactivated_layers[layer_index - 1], self.inner_layer_activation_function)
-        return gradient
+                kron_product = np.kron(np.eye(self.num_neurons), transposed_output)
+                layer_gradient = product @ kron_product if outer_product is None else outer_product @ product @ kron_product
+                gradient = np.hstack((layer_gradient, gradient))
+                if layer_index != 0: product = product @ transposed_weight_matrices[layer_index] @ self.apply_activation_function_derivative_and_bias(unactivated_layers[layer_index - 1], self.inner_layer_activation_function)
+        return gradient, product
 
     def compute_neural_network_output(self, step, loss, regularization):
         weight_index, neural_network_output = 0, np.zeros(self.num_outputs).reshape(-1, 1)
-        activated_layers_blocks, unactivated_layers_blocks = [None] * (self.num_blocks + 1), [None] * (self.num_blocks + 1)
-
+        activated_layers_blocks, unactivated_layers_blocks, transposed_weights_blocks = [[None] * (self.num_blocks + 1) for _ in range(3)]
         for block_index in range(self.num_blocks + 1):
-            weight_index, transposed_weights = self.construct_transposed_weight_matrices(weight_index)
+            weight_index, transposed_weights_blocks[block_index] = self.construct_transposed_weight_matrices(weight_index)
             input = self.get_input_with_bias(step) if block_index == 0 else self.apply_activation_function_and_bias(neural_network_output, self.shortcut_activation_function)
-            activated_layers_blocks[block_index], unactivated_layers_blocks[block_index]  = self.perform_forward_propagation(transposed_weights, input)
+            activated_layers_blocks[block_index], unactivated_layers_blocks[block_index]  = self.perform_forward_propagation(transposed_weights_blocks[block_index], input)
             neural_network_output += unactivated_layers_blocks[block_index][-1]
 
+        outer_product, total_gradient = None, None
         for block_index in range(self.num_blocks, -1, -1):
-            self.neural_network_gradient_wrt_weights = self.perform_backward_propagation(activated_layers_blocks[block_index], unactivated_layers_blocks[block_index], transposed_weights, block_index)
-        
+            current_outer_product = outer_product if block_index < self.num_blocks else None
+            block_gradient, inner_product = self.perform_backward_propagation(activated_layers_blocks[block_index], unactivated_layers_blocks[block_index], transposed_weights_blocks[block_index], current_outer_product)
+
+            if block_index == self.num_blocks: total_gradient = block_gradient
+            else: total_gradient = np.hstack((block_gradient, total_gradient))
+
+            if block_index > 0:
+                block_output = sum(unactivated_layers_blocks[i][-1] for i in range(0, block_index))
+                preactivation_derivative = self.apply_activation_function_derivative_and_bias(block_output, self.shortcut_activation_function)
+                if block_index == self.num_blocks:
+                    outer_product = np.eye(self.num_outputs) + ( inner_product @ transposed_weights_blocks[block_index][0] @ preactivation_derivative)
+                else: 
+                    outer_product = outer_product @ (np.eye(self.num_outputs) + ( inner_product @ transposed_weights_blocks[block_index][0] @ preactivation_derivative))
+
+        self.neural_network_gradient_wrt_weights = total_gradient
         self.update_neural_network_weights(step, loss, regularization)
         return neural_network_output
 
@@ -111,6 +122,10 @@ class NeuralNetwork:
     def apply_activation_function_and_bias(x, activation_function):
         if activation_function == 'tanh': result = np.tanh(x)
         elif activation_function == 'swish': result = x * (1.0 / (1.0 + np.exp(-x)))
+        elif activation_function == 'identity': result = x
+        elif activation_function == 'relu': result = np.maximum(0, x)
+        elif activation_function == 'sigmoid': result = 1 / (1 + np.exp(-x))
+        elif activation_function == 'leaky_relu': result = np.where(x > 0, x, 0.01 * x)
         return np.vstack((result, [[1]]))
 
     @staticmethod
@@ -120,5 +135,11 @@ class NeuralNetwork:
             sigmoid = 1.0 / (1.0 + np.exp(-x))
             swish = x * sigmoid
             result = swish + sigmoid * (1 - swish)
+        elif activation_function == 'identity': result = np.ones_like(x)
+        elif activation_function == 'relu': result = (x > 0).astype(float)
+        elif activation_function == 'sigmoid':
+            sigmoid = 1 / (1 + np.exp(-x))
+            result = sigmoid * (1 - sigmoid)
+        elif activation_function == 'leaky_relu': result = np.where(x > 0, 1, 0.01)
         diag_result = np.diag(result.flatten())
-        return np.vstack((diag_result, np.zeros(diag_result.shape[1])))    
+        return np.vstack((diag_result, np.zeros(diag_result.shape[1])))

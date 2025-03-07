@@ -33,7 +33,7 @@ The project is organized into several key modules:
   Implements the equations governing the simulated system. This module updates the state of the system over time based on the current dynamics.
 
 - **Neural Network (`neural_network.py`):**  
-  Contains the implementation of the deep residual neural network. The network is designed to learn the mapping from inputs to outputs in an online adaptive manner, using specified activations (e.g., swish for inner and shortcut layers, tanh for the output).
+  Contains the implementation of the deep residual neural network. The network is designed to learn the mapping from inputs to outputs in an online adaptive manner, using specified activations.
 
 - **Entity (`entity.py`):**  
   Encapsulates an agent that interacts with the system dynamics. The entity uses the adaptive network to predict or control system behavior.
@@ -69,9 +69,15 @@ The project is driven by a JSON configuration file (`config.json`) that specifie
   - `num_neurons`: Number of neurons per layer.
   - `num_inputs`: Dimensionality of the input vector.
   - `num_outputs`: Dimensionality of the output vector.
-  - `inner_activation`: Activation function for the inner layers (e.g., "swish").
-  - `output_activation`: Activation function for the output layer (e.g., "tanh").
-  - `shortcut_activation`: Activation function used for residual shortcuts (e.g., "swish").
+  - `inner_activation`: Activation function for the inner layers. Options include:
+    - "tanh": Hyperbolic tangent, outputs between -1 and 1
+    - "swish": Self-gated activation (x * sigmoid(x))
+    - "identity": No activation, f(x) = x
+    - "relu": Rectified Linear Unit, max(0, x)
+    - "sigmoid": Logistic function, outputs between 0 and 1
+    - "leaky_relu": Modified ReLU with small negative slope (0.01)
+  - `output_activation`: Activation function for the output layer (same options as inner_activation).
+  - `shortcut_activation`: Activation function used for residual shortcuts (same options as inner_activation).
 
 - **Learning Parameters:**
   - `learning_rate`: The step size used during network training.
