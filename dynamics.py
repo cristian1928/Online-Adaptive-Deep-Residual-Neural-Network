@@ -1,15 +1,13 @@
 import numpy as np
 from scipy.integrate import solve_ivp
 
-def agent_dynamics(control_output):
+def agent_dynamics(positions, velocities, control_output):
     return control_output
 
-def target_dynamics(step, time_step_delta):
-    t = step * time_step_delta
-    dx_dt = -np.sqrt(2)*(np.sin(t)**3 + np.sin(t)) / ((np.sin(t)**2 + 1)**2)
-    dy_dt = np.sqrt(2)*(np.cos(t)**2 - np.sin(t)**2) / ((np.sin(t)**2 + 1)**2)
-    dz_dt = np.cos(t)
-    drift = np.array([dx_dt, dy_dt, dz_dt])
+def target_dynamics(positions, velocities):
+    x, y, z = positions
+    xDot, yDot, zDot = velocities
+    drift = np.array([np.cos(x), np.sin(y), np.cos(2*z)])
     return drift
 
 def integrate_step(initial_state, step, time_step_delta, derivative_func):

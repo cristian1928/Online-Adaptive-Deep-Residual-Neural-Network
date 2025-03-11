@@ -20,7 +20,7 @@ class NeuralNetwork:
         self.learning_rate = config['learning_rate'] * np.eye(np.size(self.weights))
 
     def initialize_weights(self):
-        activation_to_variance = {'tanh': 1, 'swish': 2}
+        activation_to_variance = {'tanh': 1, 'sigmoid': 1, 'identity': 1, 'swish': 2, 'relu': 2, 'leaky_relu': 2}
         inner_layer_variance = activation_to_variance[self.inner_layer_activation_function]
         output_layer_variance = activation_to_variance[self.outer_layer_activation_function]
         weights = []
@@ -95,10 +95,8 @@ class NeuralNetwork:
             if block_index > 0:
                 block_output = sum(unactivated_layers_blocks[i][-1] for i in range(0, block_index))
                 preactivation_derivative = self.apply_activation_function_derivative_and_bias(block_output, self.shortcut_activation_function)
-                if block_index == self.num_blocks:
-                    outer_product = np.eye(self.num_outputs) + ( inner_product @ transposed_weights_blocks[block_index][0] @ preactivation_derivative)
-                else: 
-                    outer_product = outer_product @ (np.eye(self.num_outputs) + ( inner_product @ transposed_weights_blocks[block_index][0] @ preactivation_derivative))
+                if block_index == self.num_blocks: outer_product = np.eye(self.num_outputs) + (inner_product @ transposed_weights_blocks[block_index][0] @ preactivation_derivative)
+                else: outer_product = outer_product @ (np.eye(self.num_outputs) + ( inner_product @ transposed_weights_blocks[block_index][0] @ preactivation_derivative))
 
         self.neural_network_gradient_wrt_weights = total_gradient
         self.update_neural_network_weights(step, loss, regularization)

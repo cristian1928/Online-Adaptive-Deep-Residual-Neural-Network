@@ -13,11 +13,8 @@ def ensure_directory_exists(directory: str):
 def save_state_to_csv(step, time, agents, target):
     ensure_directory_exists('simulation_data')
 
-    for i, agent in enumerate(agents, start=1):
-        ID = f"Agent {i}"
-
+    for agent in agents:
         tracking_error_norm = np.linalg.norm(agent.tracking_error)
-        function_approximation_error = np.linalg.norm(target.dynamics - agent.neural_network_output)
 
         state_data = pd.DataFrame({
             'Time': [time],
@@ -25,11 +22,10 @@ def save_state_to_csv(step, time, agents, target):
             'Position_Y': [agent.positions[1, step - 1]],
             'Position_Z': [agent.positions[2, step - 1]],
             'Tracking_Error_Norm': [tracking_error_norm],
-            'Function_Approximation_Error': [function_approximation_error],
         })
 
         # Construct the file path using the new ID
-        state_file_path = f'simulation_data/{ID}_state_data.csv'
+        state_file_path = f'simulation_data/{agent.agent_type}_state_data.csv'
 
         if step == 1:
             # If file exists, remove it so a fresh CSV is created
@@ -60,8 +56,7 @@ def save_state_to_csv(step, time, agents, target):
 def save_nn_to_csv(step, time, agents):
     ensure_directory_exists('simulation_data')
 
-    for i, agent in enumerate(agents, start=1):
-        ID = f"Agent {i}"
+    for agent in agents:
         # Convert each weight to a float
         # If 'weights' is a list/array of shape (N,), flatten them to pure floats:
         float_weights = []
@@ -78,7 +73,7 @@ def save_nn_to_csv(step, time, agents):
             **{f'Weight_{j + 1}': [float_weights[j]] for j in range(len(float_weights))},
         })
 
-        nn_file_path = f'simulation_data/{ID}_nn_data.csv'
+        nn_file_path = f'simulation_data/{agent.agent_type}_nn_data.csv'
 
         # Write headers if step == 1, else append
         if step == 1:
@@ -126,7 +121,7 @@ def plot_from_csv():
     for i, agent_state_data in enumerate(agents_state_data):
         tracking_error_norm = agent_state_data['Tracking_Error_Norm']
         rms_tracking_error = np.sqrt(np.mean(tracking_error_norm**2))
-        plt.plot(time_array, tracking_error_norm, label=f'Agent {i+1}: RMS {rms_tracking_error:.4f} m')
+        plt.plot(time_array, tracking_error_norm, label=f'{agent_types[i].title()}: RMS {rms_tracking_error:.4f} m')
     mean_rms_tracking_error = np.mean([np.sqrt(np.mean(agent_state_data['Tracking_Error_Norm']**2)) for agent_state_data in agents_state_data])
     print(f'Mean RMS Tracking Error: {mean_rms_tracking_error:.4f} m')
     plt.xlabel('Time (s)')
@@ -146,20 +141,20 @@ def plot_from_csv():
     plt.grid(**IEEE_GRID_STYLE)
 
     # Plot function approximation error over time
-    plt.figure(figsize=IEEE_FIGSIZE)
-    for i, agent_state_data in enumerate(agents_state_data):
-        time_array = agent_state_data['Time']
-        error_columns = [col for col in agent_state_data.columns if col.startswith('Function_')]
-        for ecol in error_columns: plt.plot(time_array, agent_state_data[ecol], label=f'Agent {i+1} - {ecol}')
-    plt.xlabel('Time (s)')
-    plt.ylabel('Function Approximation Error $(m/s)$')
-    plt.grid(**IEEE_GRID_STYLE)
+    #plt.figure(figsize=IEEE_FIGSIZE)
+    #for i, agent_state_data in enumerate(agents_state_data):
+    #    time_array = agent_state_data['Time']
+    #    error_columns = [col for col in agent_state_data.columns if col.startswith('Function_')]
+    #    for ecol in error_columns: plt.plot(time_array, agent_state_data[ecol], label=f'Agent {i+1} - {ecol}')
+    #plt.xlabel('Time (s)')
+    #plt.ylabel('Function Approximation Error $(m/s)$')
+    #plt.grid(**IEEE_GRID_STYLE)
 
     # Plot positions in 3D space (including target)
     fig = plt.figure(figsize=IEEE_FIGSIZE)
     ax = fig.add_subplot(111, projection='3d')
     for i, agent_state_data in enumerate(agents_state_data):
-        ax.plot(agent_state_data['Position_X'],  agent_state_data['Position_Y'], agent_state_data['Position_Z'], label=f'Agent {i+1}')
+        ax.plot(agent_state_data['Position_X'],  agent_state_data['Position_Y'], agent_state_data['Position_Z'], label=f'{agent_types[i].title()}')
     ax.plot(target_state_data['Position_X'], target_state_data['Position_Y'], target_state_data['Position_Z'], label='Target', linestyle='--')
     ax.set_xlabel('X Position $(m)$')
     ax.set_ylabel('Y Position $(m)$')

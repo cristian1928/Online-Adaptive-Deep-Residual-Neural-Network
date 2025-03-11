@@ -2,20 +2,20 @@
     "final_time": 60,
     "time_step_delta": 0.01,
     "num_states": 3,
-    "num_agents": 1,
 
-    "num_blocks": 0,
-    "num_layers": 4,
-    "num_neurons": 16,
-    "num_inputs": 3,
+    "num_blocks": 4,
+    "num_layers": 1,
+    "num_neurons": 4,
+    "num_inputs": 12,
     "num_outputs": 3,
-    "inner_activation": "swish",
+    "inner_activation": "tanh",
     "output_activation": "tanh",
-    "shortcut_activation": "tanh",
+    "shortcut_activation": "swish",
 
     "learning_rate": 1.0,
     "weight_bounds": 25,
 
     "k1": 1,
+    "k2": 1,
     "forgetting_factor": 0.0001
 }
