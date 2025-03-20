@@ -12,8 +12,8 @@ class NeuralNetwork:
         self.num_blocks = config['num_blocks']
         self.num_layers = config['num_layers']
         self.num_neurons = config['num_neurons']
-        self.num_inputs = config['num_inputs']
-        self.num_outputs = config['num_outputs']
+        self.num_inputs = input_func(1).shape[0]
+        self.num_outputs = config['num_states']
         self.weight_bounds = config['weight_bounds']        
         self.initialize_weights()
         self.neural_network_gradient_wrt_weights = None
@@ -30,6 +30,7 @@ class NeuralNetwork:
             weights.extend(self.generate_initialized_weights(self.num_neurons, self.num_neurons, inner_layer_variance) for _ in range(self.num_layers - 1))
             weights.append(self.generate_initialized_weights(self.num_neurons, self.num_outputs, output_layer_variance))
         self.weights = np.vstack(weights)
+        print(np.size(self.weights))
 
     def generate_initialized_weights(self, input_size, output_size, variance_factor):
         variance = variance_factor / input_size  # Applies either Xavier (1/input) or He (2/input) initialization

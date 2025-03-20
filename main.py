@@ -9,16 +9,15 @@ class Simulation:
         self.time_step_delta = config['time_step_delta']
         self.time_steps = int(self.final_time / self.time_step_delta)
         self.num_states = config['num_states']
-
         np.random.seed(0)
+
         target_position = np.random.uniform(-10, 10, self.num_states)
         target_velocity = np.zeros(self.num_states)
-        self.target = Target(self.num_states, target_position, target_velocity, self.time_steps, self.time_step_delta)
+        self.target = Target(target_position, target_velocity, self.time_steps, config)
 
-        np.random.seed(1)
         agent_position = np.zeros(self.num_states)
         agent_velocity = np.zeros(self.num_states)
-        control1 = Agent(self.num_states, agent_position, agent_velocity, self.time_steps, self.target, config, "Tracking Error Based")
+        control1 = Agent(agent_position, agent_velocity, self.time_steps, config, self.target, config['ID'])
         self.agents = [control1]
 
     def run(self):

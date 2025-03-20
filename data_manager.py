@@ -122,8 +122,6 @@ def plot_from_csv():
         tracking_error_norm = agent_state_data['Tracking_Error_Norm']
         rms_tracking_error = np.sqrt(np.mean(tracking_error_norm**2))
         plt.plot(time_array, tracking_error_norm, label=f'{agent_types[i].title()}: RMS {rms_tracking_error:.4f} m')
-    mean_rms_tracking_error = np.mean([np.sqrt(np.mean(agent_state_data['Tracking_Error_Norm']**2)) for agent_state_data in agents_state_data])
-    print(f'Mean RMS Tracking Error: {mean_rms_tracking_error:.4f} m')
     plt.xlabel('Time (s)')
     plt.ylabel('Tracking Error Norm $(m)$')
     plt.legend(loc='best', fontsize=IEEE_FONTSIZE, frameon=True)
@@ -154,7 +152,7 @@ def plot_from_csv():
     fig = plt.figure(figsize=IEEE_FIGSIZE)
     ax = fig.add_subplot(111, projection='3d')
     for i, agent_state_data in enumerate(agents_state_data):
-        ax.plot(agent_state_data['Position_X'],  agent_state_data['Position_Y'], agent_state_data['Position_Z'], label=f'{agent_types[i].title()}')
+       ax.plot(agent_state_data['Position_X'],  agent_state_data['Position_Y'], agent_state_data['Position_Z'], label=f'{agent_types[i].title()}')
     ax.plot(target_state_data['Position_X'], target_state_data['Position_Y'], target_state_data['Position_Z'], label='Target', linestyle='--')
     ax.set_xlabel('X Position $(m)$')
     ax.set_ylabel('Y Position $(m)$')

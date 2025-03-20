@@ -1,19 +1,19 @@
 {
     "final_time": 60,
-    "time_step_delta": 0.01,
+    "time_step_delta": 0.001,
     "num_states": 3,
+    "control_size": 5,
 
-    "num_blocks": 4,
-    "num_layers": 1,
-    "num_neurons": 4,
-    "num_inputs": 12,
-    "num_outputs": 3,
-    "inner_activation": "tanh",
+    "ID": "ResNet",
+    "num_blocks": 8,
+    "num_layers": 2,
+    "num_neurons": 16,
+    "inner_activation": "swish",
     "output_activation": "tanh",
     "shortcut_activation": "swish",
 
     "learning_rate": 1.0,
-    "weight_bounds": 25,
+    "weight_bounds": 10,
 
     "k1": 1,
     "k2": 1,

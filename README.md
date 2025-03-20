@@ -14,7 +14,7 @@ An implementation of an online adaptive deep neural network with residual connec
 
 ## Overview
 
-This project combines online adaptive learning with deep residual network architecture to efficiently approximate the dynamics of complex systems. The framework simulates system behavior, continuously updates the network in an online manner, and provides real-time visualization of both the simulation and the training process. It is ideal for researchers and developers looking to experiment with adaptive control algorithms and residual neural network architectures.
+This project combines online adaptive learning with deep residual network architecture to efficiently approximate the dynamics of complex systems. The framework simulates system behavior and continuously updates the network in an online manner. It is ideal for researchers and developers looking to experiment with adaptive control algorithms and residual neural network architectures.
 
 ## Features
 
@@ -80,9 +80,8 @@ The project is driven by a JSON configuration file (`config.json`) that specifie
   - `shortcut_activation`: Activation function used for residual shortcuts (same options as inner_activation).
 
 - **Learning Parameters:**
-  - `learning_rate`: The step size used during network training.
+  - `learning_rate`: Parameter controlling the rate at which information is “adapted” during online learning.
   - `weight_bounds`: Maximum allowable magnitude for network weights.
-  - `k1`: A scaling factor or gain parameter used in the adaptive algorithm.
   - `forgetting_factor`: Parameter controlling the rate at which past information is “forgotten” during online learning.
 
 You can modify these parameters to experiment with different simulation settings and network architectures.
@@ -92,7 +91,7 @@ You can modify these parameters to experiment with different simulation settings
 To run the simulation and begin online adaptive learning, execute the main script:
 
 ```bash
-python main.py
+python3 main.py
 ```
 This will:
 - Initialize the system dynamics and network with the parameters specified in config.json.
