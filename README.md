@@ -103,6 +103,22 @@ This will:
 
 This project is licensed under the GNU Affero General Public License v3.0. See the [LICENSE](LICENSE) file for details.
 
+## Attribution
+
+If you use this code or our results in your research, please cite:
+
+```
+@article{Nino.Patil.ea2025,
+  author        = {Cristian F. Nino and Omkar Sudhir Patil and Marla R. Eisman and Warren E. Dixon},
+  title         = {Online ResNet-Based Adaptive Control for Nonlinear Target Tracking},
+  year          = {2025},
+  archiveprefix = {arXiv},
+  eprint        = {2503.14372},
+  primaryclass  = {eess.SY},
+  url           = {https://arxiv.org/abs/2503.14372},
+}
+```
+
 ## Contact
 
 For questions, suggestions, or further information, please contact:
