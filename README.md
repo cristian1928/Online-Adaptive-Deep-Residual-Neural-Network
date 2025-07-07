@@ -1,6 +1,6 @@
 # Online Adaptive Deep Residual Neural Network
 
-An implementation of an online adaptive deep neural network with residual connections designed for modeling and controlling dynamical systems. This repository provides a simulation framework where a deep neural network continuously learns and adapts its weights in real time, improving its performance with each simulation step.
+An implementation of an online adaptive deep neural network with residual connections designed for modeling and controlling dynamical systems. This repository provides a simulation framework where a deep neural network continuously learns and adapts its weights in real time.
 
 ## Table of Contents
 
@@ -14,7 +14,7 @@ An implementation of an online adaptive deep neural network with residual connec
 
 ## Overview
 
-This project combines online adaptive learning with deep residual network architecture to efficiently approximate the dynamics of complex systems. The framework simulates system behavior and continuously updates the network in an online manner. It is ideal for researchers and developers looking to experiment with adaptive control algorithms and residual neural network architectures.
+This project combines online adaptive learning with deep residual network architecture to approximate the dynamics of autonomous dynamical systems. The framework simulates system behavior and continuously updates the network in an online manner. It is ideal for researchers and developers looking to experiment with adaptive control algorithms and neural network architectures.
 
 ## Features
 
@@ -106,16 +106,16 @@ This project is licensed under the GNU Affero General Public License v3.0. See t
 ## Attribution
 
 If you use this code or our results in your research, please cite:
-
+ 
 ```
 @article{Nino.Patil.ea2025,
   author        = {Cristian F. Nino and Omkar Sudhir Patil and Marla R. Eisman and Warren E. Dixon},
   title         = {Online ResNet-Based Adaptive Control for Nonlinear Target Tracking},
   year          = {2025},
-  archiveprefix = {arXiv},
-  eprint        = {2503.14372},
-  primaryclass  = {eess.SY},
-  url           = {https://arxiv.org/abs/2503.14372},
+  journal={IEEE Control Systems Letters},,
+  volume={9},
+  pages={907-912},
+  doi={10.1109/LCSYS.2025.3576652}}
 }
 ```
 
