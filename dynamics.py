@@ -61,3 +61,35 @@ def trophic_dynamics(state):
 
 def custom(state):
     return None
+
+# =======================================================
+# Dynamics mapping and configuration system
+# =======================================================
+
+def get_dynamics_function(dynamics_type):
+    """Get the dynamics function based on the dynamics type."""
+    dynamics_map = {
+        "attitude_mrp": attitude_mrp,
+        "chua": chua,
+        "trophic_dynamics": trophic_dynamics,
+        "custom": custom
+    }
+    
+    if dynamics_type not in dynamics_map:
+        raise ValueError(f"Unknown dynamics type: {dynamics_type}. Available types: {list(dynamics_map.keys())}")
+    
+    return dynamics_map[dynamics_type]
+
+def get_initial_conditions(dynamics_type):
+    """Get the appropriate initial conditions for the dynamics type."""
+    initial_conditions_map = {
+        "attitude_mrp": [0.25, 0.10, -0.30],  # Modified Rodrigues Parameters (||r|| < 1)
+        "chua": [0.2, 0.0, 0.0],  # Chua circuit initial conditions
+        "trophic_dynamics": [40, 9, 2],  # Ecological food-chain model (H, P, T)
+        "custom": [0.0, 0.0, 0.0]  # Default for custom dynamics
+    }
+    
+    if dynamics_type not in initial_conditions_map:
+        raise ValueError(f"Unknown dynamics type: {dynamics_type}. Available types: {list(initial_conditions_map.keys())}")
+    
+    return initial_conditions_map[dynamics_type]

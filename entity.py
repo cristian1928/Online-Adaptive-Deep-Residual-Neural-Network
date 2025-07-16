@@ -40,4 +40,11 @@ class Agent(Entity):
     def update_dynamics(self, step): self.positions[:, step] = integrate_step(self.positions[:, step - 1], step, self.time_step_delta, lambda t, y: self.control_output)
 
 class Target(Entity):
-    def update_dynamics(self, step): self.positions[:, step] = integrate_step(self.positions[:, step - 1], step, self.time_step_delta, lambda t, pos: dynamics.trophic_dynamics(pos))
+    def __init__(self, initial_position, time_steps, config):
+        super().__init__(initial_position, time_steps, config)
+        # Get dynamics function based on config
+        dynamics_type = config.get('dynamics_type', 'trophic_dynamics')
+        self.dynamics_function = dynamics.get_dynamics_function(dynamics_type)
+        
+    def update_dynamics(self, step): 
+        self.positions[:, step] = integrate_step(self.positions[:, step - 1], step, self.time_step_delta, lambda t, pos: self.dynamics_function(pos))
