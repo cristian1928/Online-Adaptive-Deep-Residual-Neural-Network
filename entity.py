@@ -42,7 +42,6 @@ class Agent(Entity):
 class Target(Entity):
     def __init__(self, initial_position, time_steps, config):
         super().__init__(initial_position, time_steps, config)
-        # Get dynamics function based on config
         dynamics_type = config.get('dynamics_type', 'trophic_dynamics')
         self.dynamics_function = dynamics.get_dynamics_function(dynamics_type)
         

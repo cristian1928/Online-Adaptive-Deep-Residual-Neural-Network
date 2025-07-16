@@ -227,9 +227,9 @@ def animate():
 
     # Find data bounds for consistent scaling
     position_data = agents_state_data + [target_state_data]
-    x_min, x_max = min(data['Position_X'].min() for data in position_data), max(data['Position_X'].max() for data in position_data)
-    y_min, y_max = min(data['Position_Y'].min() for data in position_data), max(data['Position_Y'].max() for data in position_data)
-    z_min, z_max = min(data['Position_Z'].min() for data in position_data), max(data['Position_Z'].max() for data in position_data)
+    x_min, x_max = min(data['Position X'].min() for data in position_data), max(data['Position X'].max() for data in position_data)
+    y_min, y_max = min(data['Position Y'].min() for data in position_data), max(data['Position Y'].max() for data in position_data)
+    z_min, z_max = min(data['Position Z'].min() for data in position_data), max(data['Position Z'].max() for data in position_data)
 
     margin = 0.1
     x_range, y_range, z_range = x_max - x_min, y_max - y_min, z_max - z_min
@@ -261,15 +261,15 @@ def animate():
         start_idx = max(0, frame - trail_length)
 
         for i, data in enumerate(agents_state_data):
-            agent_lines[i].set_data(data['Position_X'][start_idx:frame+1], data['Position_Y'][start_idx:frame+1])
-            agent_lines[i].set_3d_properties(data['Position_Z'][start_idx:frame+1])
-            agent_points[i].set_data([data['Position_X'][frame]], [data['Position_Y'][frame]])
-            agent_points[i].set_3d_properties([data['Position_Z'][frame]])
+            agent_lines[i].set_data(data['Position X'][start_idx:frame+1], data['Position Y'][start_idx:frame+1])
+            agent_lines[i].set_3d_properties(data['Position Z'][start_idx:frame+1])
+            agent_points[i].set_data([data['Position X'][frame]], [data['Position Y'][frame]])
+            agent_points[i].set_3d_properties([data['Position Z'][frame]])
 
-        target_line.set_data(target_state_data['Position_X'][start_idx:frame+1], target_state_data['Position_Y'][start_idx:frame+1])
-        target_line.set_3d_properties(target_state_data['Position_Z'][start_idx:frame+1])
-        target_point.set_data([target_state_data['Position_X'][frame]], [target_state_data['Position_Y'][frame]])
-        target_point.set_3d_properties([target_state_data['Position_Z'][frame]])
+        target_line.set_data(target_state_data['Position X'][start_idx:frame+1], target_state_data['Position Y'][start_idx:frame+1])
+        target_line.set_3d_properties(target_state_data['Position Z'][start_idx:frame+1])
+        target_point.set_data([target_state_data['Position X'][frame]], [target_state_data['Position Y'][frame]])
+        target_point.set_3d_properties([target_state_data['Position Z'][frame]])
 
         return agent_lines + agent_points + [target_line, target_point, time_text]
 

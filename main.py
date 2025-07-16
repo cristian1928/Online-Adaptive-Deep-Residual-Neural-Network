@@ -12,14 +12,8 @@ def run_simulation(config):
     num_states = config['num_states']
     np.random.seed(config['seed'])
 
-    # Initialize target with automatic initial conditions selection
-    dynamics_type = config.get('dynamics_type', 'trophic_dynamics')
-    if 'target_initial_conditions' in config:
-        # Use explicit config if provided (backward compatibility)
-        target_position = np.array(config['target_initial_conditions'])
-    else:
-        # Use automatic initial conditions based on dynamics type
-        target_position = np.array(dynamics.get_initial_conditions(dynamics_type))
+    if 'target_initial_conditions' in config: target_position = np.array(config['target_initial_conditions'])
+    else: target_position = np.array(dynamics.get_initial_conditions(config.get('dynamics_type', 'trophic_dynamics')))
     
     target = Target(target_position, time_steps, config)
 
