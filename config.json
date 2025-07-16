@@ -1,21 +1,27 @@
 {
-    "final_time": 60,
+    "final_time": 30,
     "time_step_delta": 0.001,
-    "num_states": 3,
-    "control_size": 5,
 
-    "ID": "ResNet",
-    "num_blocks": 8,
+    "seed": 0,
+    "num_states": 3,
+    "control_size": 3,
+
+    "target_initial_conditions": [40, 9, 2],
+
+    "ID": "Residual Neural Network",
+    "output_size": 3,
+    "num_blocks": 4,
     "num_layers": 2,
-    "num_neurons": 16,
+    "num_neurons": 2,
     "inner_activation": "swish",
     "output_activation": "tanh",
     "shortcut_activation": "swish",
 
-    "learning_rate": 1.0,
-    "weight_bounds": 10,
+    "minimum_learning_rate": 0.01,
+    "initial_learning_rate": 1,
+    "maximum_learning_rate": 8,
 
-    "k1": 1,
-    "k2": 1,
-    "forgetting_factor": 0.0001
+    "weight_bounds": 4,
+
+    "k1": 1
 }
