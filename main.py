@@ -2,6 +2,7 @@ import numpy as np
 import json
 from entity import Agent, Target
 from data_manager import save_nn_to_csv, save_state_to_csv, results, close_all_files
+import dynamics
 
 def run_simulation(config):
     # Setup simulation parameters
@@ -11,8 +12,15 @@ def run_simulation(config):
     num_states = config['num_states']
     np.random.seed(config['seed'])
 
-    # Initialize target
-    target_position = np.array(config['target_initial_conditions'])
+    # Initialize target with automatic initial conditions selection
+    dynamics_type = config.get('dynamics_type', 'trophic_dynamics')
+    if 'target_initial_conditions' in config:
+        # Use explicit config if provided (backward compatibility)
+        target_position = np.array(config['target_initial_conditions'])
+    else:
+        # Use automatic initial conditions based on dynamics type
+        target_position = np.array(dynamics.get_initial_conditions(dynamics_type))
+    
     target = Target(target_position, time_steps, config)
 
     # Initialize agent
