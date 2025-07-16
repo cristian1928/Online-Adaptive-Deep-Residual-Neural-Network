@@ -41,19 +41,19 @@ def _flush_buffer(file_path):
 
 def save_state_to_csv(step, time, agents, target):
     ensure_directory_exists(DATA_DIR)
-    
+
     target_row = {'Time': time, 'Position X': target.positions[0, step - 1], 'Position Y': target.positions[1, step - 1], 'Position Z': target.positions[2, step - 1]}
-    
+
     # Process agents
     for i, agent in enumerate(agents):
         tracking_error_norm = np.linalg.norm(agent.tracking_error)
         agent_type = getattr(agent, 'agent_type', f'agent_{i}')
         state_file_path = f'{DATA_DIR}/{agent_type}{STATE_DATA_SUFFIX}'
-        
+
         # Initialize writer if needed
         headers = ['Time', 'Position X', 'Position Y', 'Position Z', 'Tracking Error Norm']
         _get_csv_writer(state_file_path, headers, step)
-        
+
         # Buffer the data instead of writing immediately
         row_data = {
             'Time': time,
@@ -63,31 +63,31 @@ def save_state_to_csv(step, time, agents, target):
             'Tracking Error Norm': tracking_error_norm,
         }
         _data_buffers[state_file_path].append(row_data)
-        
+
         if len(_data_buffers[state_file_path]) >= _buffer_size: _flush_buffer(state_file_path)
-    
+
     target_headers = ['Time', 'Position X', 'Position Y', 'Position Z']
     _get_csv_writer(TARGET_FILE, target_headers, step)
     _data_buffers[TARGET_FILE].append(target_row)
-    
+
     if len(_data_buffers[TARGET_FILE]) >= _buffer_size:  _flush_buffer(TARGET_FILE)
 
 def save_nn_to_csv(step, time, agents):
     ensure_directory_exists(DATA_DIR)
-    
+
     for agent in agents:
         weights = agent.neural_network.weights
         if isinstance(weights[0], (list, np.ndarray)) and len(weights[0]) == 1: float_weights = [float(w[0]) for w in weights]
         else: float_weights = [float(w) for w in weights]
-        
+
         learning_rate_matrix = agent.neural_network.learning_rate[step]
         eigvals = np.real(np.linalg.eigvals(learning_rate_matrix))
-        
+
         nn_file_path = f'{DATA_DIR}/{agent.agent_type}{NN_DATA_SUFFIX}'
-        
+
         headers = ['Time', 'Learning Rate Spectral Norm', 'Function Approximation Error Norm', 'Neural Network Output',] + [f'Weight_{j + 1}' for j in range(len(float_weights))]
         _get_csv_writer(nn_file_path, headers, step)
-        
+
         row_data = {
             'Time': time,
             'Learning Rate Spectral Norm': np.max(eigvals),
@@ -95,14 +95,14 @@ def save_nn_to_csv(step, time, agents):
             'Neural Network Output': np.linalg.norm(agent.neural_network_output)
         }
         row_data.update({f'Weight_{j + 1}': w for j, w in enumerate(float_weights)})
-        
+
         _data_buffers[nn_file_path].append(row_data)
-        
+
         if len(_data_buffers[nn_file_path]) >= _buffer_size: _flush_buffer(nn_file_path)
 
 def close_all_files():
     for file_path in list(_data_buffers.keys()): _flush_buffer(file_path)
-    
+
     for handle in _file_handles.values(): handle.close()
 
     _file_handles.clear()
@@ -218,25 +218,25 @@ def plot_from_csv():
 def animate():
     plt.style.use('default')
     agent_types, agents_state_data, target_state_data = get_simulation_data()
-    
+
     fig = plt.figure()
     ax = fig.add_subplot(111, projection='3d')
     ax.set_xlabel('X Position (m)')
     ax.set_ylabel('Y Position (m)')
     ax.set_zlabel('Z Position (m)')
-    
+
     # Find data bounds for consistent scaling
     position_data = agents_state_data + [target_state_data]
     x_min, x_max = min(data['Position_X'].min() for data in position_data), max(data['Position_X'].max() for data in position_data)
     y_min, y_max = min(data['Position_Y'].min() for data in position_data), max(data['Position_Y'].max() for data in position_data)
     z_min, z_max = min(data['Position_Z'].min() for data in position_data), max(data['Position_Z'].max() for data in position_data)
-    
+
     margin = 0.1
     x_range, y_range, z_range = x_max - x_min, y_max - y_min, z_max - z_min
     ax.set_xlim(x_min - margin * x_range, x_max + margin * x_range)
     ax.set_ylim(y_min - margin * y_range, y_max + margin * y_range)
     ax.set_zlim(z_min - margin * z_range, z_max + margin * z_range)
-    
+
     # Initialize lines and points
     agent_lines, agent_points = [], []
     for i, agent_data in enumerate(agents_state_data):
@@ -244,41 +244,40 @@ def animate():
         point, = ax.plot([], [], [], 'o', markersize=6)
         agent_lines.append(line)
         agent_points.append(point)
-    
+
     target_line, = ax.plot([], [], [], '--', label='Target')
     target_point, = ax.plot([], [], [], 'o', markersize=6, color='red')
-    
+
     legend = ax.legend(loc='upper right', prop={'size': 7})
     legend.get_frame().set_linewidth(0.5)
     time_text = ax.text2D(0.02, 0.95, '', transform=ax.transAxes)
-    
+
     trail_length = 3500
-    
+
     def update(frame):
         current_time = target_state_data['Time'][frame]
         time_text.set_text(f'Time: {current_time:.2f} s')
-        
+    
         start_idx = max(0, frame - trail_length)
-        
+
         for i, data in enumerate(agents_state_data):
             agent_lines[i].set_data(data['Position_X'][start_idx:frame+1], data['Position_Y'][start_idx:frame+1])
             agent_lines[i].set_3d_properties(data['Position_Z'][start_idx:frame+1])
             agent_points[i].set_data([data['Position_X'][frame]], [data['Position_Y'][frame]])
             agent_points[i].set_3d_properties([data['Position_Z'][frame]])
-        
+
         target_line.set_data(target_state_data['Position_X'][start_idx:frame+1], target_state_data['Position_Y'][start_idx:frame+1])
         target_line.set_3d_properties(target_state_data['Position_Z'][start_idx:frame+1])
         target_point.set_data([target_state_data['Position_X'][frame]], [target_state_data['Position_Y'][frame]])
         target_point.set_3d_properties([target_state_data['Position_Z'][frame]])
-        
+
         return agent_lines + agent_points + [target_line, target_point, time_text]
-    
+
     num_frames = len(target_state_data)
-    ani = FuncAnimation(fig, update, frames=range(0, num_frames, max(1, num_frames//200)), blit=False, interval=75)
-    
+
     plt.tight_layout()
     plt.show()
-    return ani
+    return FuncAnimation(fig, update, frames=range(0, num_frames, max(1, num_frames//200)), blit=False, interval=75)
 
 def results():
     close_all_files()

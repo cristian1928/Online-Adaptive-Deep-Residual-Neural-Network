@@ -10,36 +10,35 @@ def run_simulation(config):
     time_steps = int(final_time / time_step_delta)
     num_states = config['num_states']
     np.random.seed(config['seed'])
-    
+
     # Initialize target
     target_position = np.array(config['target_initial_conditions'])
     target = Target(target_position, time_steps, config)
-    
+
     # Initialize agent
     agent_position = np.zeros(num_states)
     agent = Agent(agent_position, time_steps, config, target, config['ID'])
     agents = [agent]
-    
+
     # Main simulation loop
     for step in range(1, time_steps):
         # Update all agents
         for agent in agents: agent.compute_control_output(step)
         for agent in agents: agent.update_dynamics(step)
         target.update_dynamics(step)
-        
+
         # Save data
         time_sim = step * time_step_delta
         save_state_to_csv(step, time_sim, agents, target)
         save_nn_to_csv(step, time_sim, agents)
-        
+
         # Progress display
         print(f'Progress: {step / time_steps * 100:6.2f}%', end='\r', flush=True)
-    
+
     print("\nSimulation completed.")
     close_all_files()
     results()
 
 if __name__ == "__main__":
-    with open('config.json', 'r') as config_file:
-        config = json.load(config_file)
+    with open('config.json', 'r') as config_file: config = json.load(config_file)
     run_simulation(config)

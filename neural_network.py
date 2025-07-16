@@ -77,7 +77,7 @@ class NeuralNetwork:
                 gradient = np.hstack((layer_gradient, gradient))
                 if layer_index != 0: product = product @ transposed_weight_matrices[layer_index] @ self.apply_activation_function_derivative_and_bias(unactivated_layers[layer_index - 1], self.inner_layer_activation_function)
         return gradient, product
-    
+
     def _run_forward_pass(self, step):
         weight_index, neural_network_output = 0, np.zeros(self.num_outputs).reshape(-1, 1)
         activated_layers_blocks, unactivated_layers_blocks, transposed_weights_blocks = [[None] * (self.num_blocks + 1) for _ in range(3)]
