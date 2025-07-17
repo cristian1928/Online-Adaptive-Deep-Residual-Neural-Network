@@ -88,16 +88,47 @@ You can modify these parameters to experiment with different simulation settings
 
 ## Usage
 
-To run the simulation and begin online adaptive learning, execute the main script:
+The project can be run in multiple ways:
+
+### Using the installed package (recommended)
 
 ```bash
-python3 main.py
+# Run simulation with default configuration
+online-adaptive-resnet
+
+# Run with custom configuration
+online-adaptive-resnet --config my_config.json
+
+# Generate plots from existing data only
+online-adaptive-resnet --plot-only
 ```
+
+### Using Python module syntax
+
+```bash
+# Run simulation with default configuration
+python -m online_adaptive_resnet
+
+# Run with custom configuration
+python -m online_adaptive_resnet --config my_config.json
+
+# Generate plots from existing data only
+python -m online_adaptive_resnet --plot-only
+```
+
+### Installation
+
+For development, install the package in editable mode:
+
+```bash
+pip install -e .
+```
+
 This will:
-- Initialize the system dynamics and network with the parameters specified in config.json.
-- Start the simulation loop where the system state is updated at each time step.
-- Adapt the neural network weights in an online manner.
-- Log data via the data manager and update visualizations in real time using the plotter.
+- Initialize the system dynamics and network with the parameters specified in config.json
+- Start the simulation loop where the system state is updated at each time step
+- Adapt the neural network weights in an online manner
+- Log data via the data manager and update visualizations in real time using the plotter
 
 ## Development Workflow
 

@@ -22,12 +22,17 @@ def configure_plot() -> None:
         plt.style.use(["science", "ieee"])
     except OSError:
         plt.style.use("default")
+    
+    # Set up matplotlib parameters
     plt.rcParams["font.size"] = 12
     plt.rcParams["axes.linewidth"] = 1.5
     plt.rcParams["legend.frameon"] = True
     plt.rcParams["legend.framealpha"] = 1.0
     plt.rcParams["legend.fancybox"] = True
     plt.rcParams["legend.edgecolor"] = "black"
+    
+    # Disable LaTeX to avoid dependency issues
+    plt.rcParams["text.usetex"] = False
 
 
 def create_plot_with_config(figsize: Tuple[int, int] = (8, 6)) -> Tuple["Figure", "Axes"]:
