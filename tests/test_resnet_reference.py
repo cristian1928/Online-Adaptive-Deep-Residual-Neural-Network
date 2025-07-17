@@ -8,7 +8,9 @@ Any element‑wise deviation > 1 e‑6 fails the test.
 from pathlib import Path
 import os, sys
 import numpy as np
+import numpy.typing as npt
 import pytest
+from typing import Dict, Any, Callable
 
 # make the project root importable
 sys.path.insert(0, Path(__file__).resolve().parent.parent.as_posix())
@@ -128,7 +130,7 @@ EXPECTED_DTHETA = np.hstack([DTHETA_0, DTHETA_1, DTHETA_2])
 # ---------------------------------------------------------------------------
 # The test
 # ---------------------------------------------------------------------------
-def test_resnet_reference_forward_and_gradient():
+def test_resnet_reference_forward_and_gradient() -> None:
     nn = NeuralNetwork(_input, CONFIG)
     nn.set_weights(REFERENCE_WEIGHTS)
 

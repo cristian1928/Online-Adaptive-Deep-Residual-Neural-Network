@@ -181,7 +181,7 @@ def animate() -> None:
         target_point.set_data([target_state_data['Position X'][frame]], [target_state_data['Position Y'][frame]])
         target_point.set_3d_properties([target_state_data['Position Z'][frame]])
 
-        return update agent_lines + agent_points + [target_line, target_point, time_text]
+        return agent_lines + agent_points + [target_line, target_point, time_text]
 
     num_frames = len(target_state_data)
 

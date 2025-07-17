@@ -10,6 +10,7 @@ import matplotlib
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 import pytest
+from typing import Dict, Any
 
 sys.path.insert(0, Path(__file__).resolve().parent.parent.as_posix())
 
@@ -41,7 +42,7 @@ TEST_CONFIG = {
 }
 
 
-def test_plotting_functionality():
+def test_plotting_functionality() -> None:
     with tempfile.TemporaryDirectory() as tmp:
         orig_cwd = Path.cwd()
         orig_data_dir = data_manager.DATA_DIR

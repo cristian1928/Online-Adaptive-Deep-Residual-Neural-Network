@@ -7,11 +7,13 @@ from pathlib import Path
 from unittest.mock import patch
 
 import numpy as np
+import numpy.typing as npt
 import pandas as pd
 import matplotlib
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 import pytest
+from typing import Dict, Any
 
 # make the package root importable
 sys.path.insert(0, Path(__file__).resolve().parent.parent.as_posix())
@@ -47,7 +49,7 @@ EXPECTED_RMS = 10.183_180_465_618_477
 TOL = 1e-6
 
 
-def test_end_to_end_simulation_tracking_error():
+def test_end_to_end_simulation_tracking_error() -> None:
     """Run the reference simulation and verify the RMS tracking‑error norm."""
     with tempfile.TemporaryDirectory() as tmp:
         orig_cwd = Path.cwd()
