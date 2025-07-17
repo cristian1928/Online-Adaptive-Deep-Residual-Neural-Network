@@ -1,1 +1,0 @@
-"""Plotting and animation utilities."""
