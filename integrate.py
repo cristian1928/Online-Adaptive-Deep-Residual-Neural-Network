@@ -1,7 +1,10 @@
 <<<<<<< HEAD
+<<<<<<< HEAD
 from typing import Callable, Union, cast
 
 import numpy as np
+=======
+>>>>>>> parent of ed2ed2d (Merge pull request #14 from cristian1928/copilot/fix-12)
 =======
 >>>>>>> parent of ed2ed2d (Merge pull request #14 from cristian1928/copilot/fix-12)
 from scipy.integrate import solve_ivp
@@ -20,8 +23,12 @@ def integrate_step(initial_state: Union[np.ndarray, float], step: int, time_step
     
     sol = solve_ivp(wrapped_derivative, [step, step + time_step_delta], y0)
 <<<<<<< HEAD
+<<<<<<< HEAD
     result = sol.y[:, -1].reshape(orig_shape)
     return cast(Union[np.ndarray, float], result)
+=======
+    return sol.y[:, -1].reshape(orig_shape)
+>>>>>>> parent of ed2ed2d (Merge pull request #14 from cristian1928/copilot/fix-12)
 =======
     return sol.y[:, -1].reshape(orig_shape)
 >>>>>>> parent of ed2ed2d (Merge pull request #14 from cristian1928/copilot/fix-12)

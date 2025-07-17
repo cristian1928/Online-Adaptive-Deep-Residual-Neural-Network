@@ -17,7 +17,10 @@ def attitude_mrp(state: np.ndarray) -> np.ndarray:
     r_dot = 0.5 * B @ omega
     return r_dot
 <<<<<<< HEAD
+<<<<<<< HEAD
 
+=======
+>>>>>>> parent of ed2ed2d (Merge pull request #14 from cristian1928/copilot/fix-12)
 =======
 >>>>>>> parent of ed2ed2d (Merge pull request #14 from cristian1928/copilot/fix-12)
 

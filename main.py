@@ -1,4 +1,5 @@
 <<<<<<< HEAD
+<<<<<<< HEAD
 import json
 from typing import Any, Dict, List
 
@@ -38,6 +39,14 @@ def run_pipeline(config: Dict[str, Any], headless: bool = True) -> float:
     run_simulation(config)
     return compute_tracking_error()
 
+=======
+import numpy as np
+import json
+from typing import Dict, Any, List
+from entity import Agent, Target
+from data_manager import save_nn_to_csv, save_state_to_csv, results, close_all_files
+import dynamics
+>>>>>>> parent of ed2ed2d (Merge pull request #14 from cristian1928/copilot/fix-12)
 
 def run_simulation(config: Dict[str, Any]) -> None:
     final_time: float = config['final_time']

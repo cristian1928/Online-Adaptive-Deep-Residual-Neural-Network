@@ -1,6 +1,9 @@
 <<<<<<< HEAD
+<<<<<<< HEAD
 from typing import Any, Callable, Dict, cast
 
+=======
+>>>>>>> parent of ed2ed2d (Merge pull request #14 from cristian1928/copilot/fix-12)
 =======
 >>>>>>> parent of ed2ed2d (Merge pull request #14 from cristian1928/copilot/fix-12)
 import numpy as np
@@ -50,6 +53,7 @@ class Target(Entity):
         
     def update_dynamics(self, step: int) -> None:
 <<<<<<< HEAD
+<<<<<<< HEAD
         dynamics_func = cast(
             Callable[[float, np.ndarray], np.ndarray], lambda t, pos: self.dynamics_function(pos)
         )
@@ -60,6 +64,11 @@ class Target(Entity):
             dynamics_func,
         )
         self.positions[:, step] = result
+=======
+        result = integrate_step(self.positions[:, step - 1], step, self.time_step_delta, 
+                               lambda t, pos: self.dynamics_function(pos))
+        self.positions[:, step] = result
+>>>>>>> parent of ed2ed2d (Merge pull request #14 from cristian1928/copilot/fix-12)
 =======
         result = integrate_step(self.positions[:, step - 1], step, self.time_step_delta, 
                                lambda t, pos: self.dynamics_function(pos))

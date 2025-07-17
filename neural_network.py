@@ -1,4 +1,5 @@
 <<<<<<< HEAD
+<<<<<<< HEAD
 from typing import Any, Callable, Dict, List, NamedTuple, Optional, Tuple
 
 import numpy as np
@@ -18,6 +19,11 @@ class ForwardPassResult(NamedTuple):
     unactivated_layers_blocks: List[List[np.ndarray]]
     transposed_weights_blocks: List[List[np.ndarray]]
 
+=======
+from integrate import integrate_step
+import numpy as np
+from typing import Dict, Any, Callable, List, Tuple, Optional, Union
+>>>>>>> parent of ed2ed2d (Merge pull request #14 from cristian1928/copilot/fix-12)
 
 class NeuralNetwork:
     def __init__(self, input_func: Callable[[int], np.ndarray], config: Dict[str, Any]) -> None:
@@ -36,6 +42,7 @@ class NeuralNetwork:
         self.initialize_weights()
         self.neural_network_gradient_wrt_weights: Optional[np.ndarray] = None
 <<<<<<< HEAD
+<<<<<<< HEAD
         self.beta_1: float = (
             config["maximum_learning_rate"] * config["minimum_learning_rate"] ** 3
         ) / (config["maximum_learning_rate"] ** 2 - config["minimum_learning_rate"] ** 2)
@@ -48,10 +55,15 @@ class NeuralNetwork:
         )[None, :, :].repeat(self.time_steps, axis=0)
         self.current_step: int = 0
 =======
+=======
+>>>>>>> parent of ed2ed2d (Merge pull request #14 from cristian1928/copilot/fix-12)
         self.beta_1: float = (config['maximum_learning_rate'] * config['minimum_learning_rate']**3) / (config['maximum_learning_rate']**2 - config['minimum_learning_rate']**2)
         self.beta_2: float = config['minimum_learning_rate']
         self.beta_3: float = (config['minimum_learning_rate'] * config['maximum_learning_rate']) / (config['maximum_learning_rate']**2 - config['minimum_learning_rate']**2)    
         self.learning_rate: np.ndarray = (config['initial_learning_rate'] * np.eye(np.size(self.weights)))[None, :, :].repeat(self.time_steps, axis=0)
+<<<<<<< HEAD
+>>>>>>> parent of ed2ed2d (Merge pull request #14 from cristian1928/copilot/fix-12)
+=======
 >>>>>>> parent of ed2ed2d (Merge pull request #14 from cristian1928/copilot/fix-12)
 
     def initialize_weights(self) -> None:
@@ -126,7 +138,11 @@ class NeuralNetwork:
         return gradient, product
 
 <<<<<<< HEAD
+<<<<<<< HEAD
     def _run_forward_pass(self, step: int) -> ForwardPassResult:
+=======
+    def _run_forward_pass(self, step: int) -> Tuple[int, np.ndarray, List[List[np.ndarray]], List[List[np.ndarray]], List[List[np.ndarray]]]:
+>>>>>>> parent of ed2ed2d (Merge pull request #14 from cristian1928/copilot/fix-12)
 =======
     def _run_forward_pass(self, step: int) -> Tuple[int, np.ndarray, List[List[np.ndarray]], List[List[np.ndarray]], List[List[np.ndarray]]]:
 >>>>>>> parent of ed2ed2d (Merge pull request #14 from cristian1928/copilot/fix-12)
@@ -144,6 +160,7 @@ class NeuralNetwork:
         
         return weight_index, neural_network_output, activated_layers_blocks, unactivated_layers_blocks, transposed_weights_blocks
 
+<<<<<<< HEAD
 <<<<<<< HEAD
         return ForwardPassResult(
             weight_index=weight_index,
@@ -163,6 +180,10 @@ class NeuralNetwork:
     def _run_backward_pass(self, activated_layers_blocks: List[List[np.ndarray]], unactivated_layers_blocks: List[List[np.ndarray]], 
                           transposed_weights_blocks: List[List[np.ndarray]]) -> np.ndarray:
 >>>>>>> parent of ed2ed2d (Merge pull request #14 from cristian1928/copilot/fix-12)
+=======
+    def _run_backward_pass(self, activated_layers_blocks: List[List[np.ndarray]], unactivated_layers_blocks: List[List[np.ndarray]], 
+                          transposed_weights_blocks: List[List[np.ndarray]]) -> np.ndarray:
+>>>>>>> parent of ed2ed2d (Merge pull request #14 from cristian1928/copilot/fix-12)
         outer_product: Optional[np.ndarray] = None
         total_gradient: np.ndarray = np.array([])
         
@@ -176,6 +197,7 @@ class NeuralNetwork:
                 total_gradient = np.hstack((block_gradient, total_gradient))
             
             if block_index > 0:
+<<<<<<< HEAD
 <<<<<<< HEAD
                 block_output = unactivated_layers_blocks[0][-1]
                 for i in range(1, block_index):
@@ -192,10 +214,15 @@ class NeuralNetwork:
                 )
 
 =======
+=======
+>>>>>>> parent of ed2ed2d (Merge pull request #14 from cristian1928/copilot/fix-12)
                 block_output: np.ndarray = sum(unactivated_layers_blocks[i][-1] for i in range(block_index))
                 preactivation_derivative: np.ndarray = self.apply_activation_function_derivative_and_bias(block_output, self.shortcut_activation_function)
                 update_term: np.ndarray = inner_product @ transposed_weights_blocks[block_index][0] @ preactivation_derivative
                 
+<<<<<<< HEAD
+>>>>>>> parent of ed2ed2d (Merge pull request #14 from cristian1928/copilot/fix-12)
+=======
 >>>>>>> parent of ed2ed2d (Merge pull request #14 from cristian1928/copilot/fix-12)
                 if block_index == self.num_blocks:
                     outer_product = np.eye(self.num_outputs) + update_term
@@ -210,6 +237,7 @@ class NeuralNetwork:
         return forward_result.neural_network_output
 
 <<<<<<< HEAD
+<<<<<<< HEAD
     def train_step(self, step: int, loss_gradient: np.ndarray) -> np.ndarray:
         forward_result = self._run_forward_pass(step)
         total_gradient = self._run_backward_pass(
@@ -217,6 +245,11 @@ class NeuralNetwork:
             forward_result.unactivated_layers_blocks,
             forward_result.transposed_weights_blocks,
         )
+=======
+    def train_step(self, step: int, loss: np.ndarray) -> np.ndarray:
+        _, neural_network_output, activated_layers_blocks, unactivated_layers_blocks, transposed_weights_blocks = self._run_forward_pass(step)
+        total_gradient: np.ndarray = self._run_backward_pass(activated_layers_blocks, unactivated_layers_blocks, transposed_weights_blocks)
+>>>>>>> parent of ed2ed2d (Merge pull request #14 from cristian1928/copilot/fix-12)
 =======
     def train_step(self, step: int, loss: np.ndarray) -> np.ndarray:
         _, neural_network_output, activated_layers_blocks, unactivated_layers_blocks, transposed_weights_blocks = self._run_forward_pass(step)
@@ -235,6 +268,7 @@ class NeuralNetwork:
         return forward_result.neural_network_output
 
     def jacobian_raw(self, step: int) -> np.ndarray:
+<<<<<<< HEAD
 <<<<<<< HEAD
         forward_result = self._run_forward_pass(step)
         total_gradient = self._run_backward_pass(
@@ -322,12 +356,41 @@ class NeuralNetwork:
         
         self.weights = integrate_step(self.weights, step, self.time_step_delta, weights_deriv)
 
+=======
+        _, neural_network_output, activated_layers_blocks, unactivated_layers_blocks, transposed_weights_blocks = self._run_forward_pass(step)
+        total_gradient: np.ndarray = self._run_backward_pass(activated_layers_blocks, unactivated_layers_blocks, transposed_weights_blocks)
+        return total_gradient
+
+    def update_learning_rate(self, step: int) -> None:
+        def learning_rate_deriv(t: float, gamma: np.ndarray) -> np.ndarray:
+            if self.neural_network_gradient_wrt_weights is None:
+                return np.zeros_like(gamma)
+            normalized_neural_network_gradient_wrt_weights: np.ndarray = self.neural_network_gradient_wrt_weights / (1.0 + np.linalg.norm(self.neural_network_gradient_wrt_weights.T @ self.neural_network_gradient_wrt_weights, 'fro')**2)
+            mat: np.ndarray = normalized_neural_network_gradient_wrt_weights @ gamma
+            return - mat.T @ mat + (self.beta_1 * np.eye(gamma.shape[0])) + (self.beta_2 * gamma) - (self.beta_3 * gamma @ gamma)
+        
+        self.learning_rate[step] = integrate_step(self.learning_rate[step - 1], step, self.time_step_delta, learning_rate_deriv)
+
+    def update_neural_network_weights(self, step: int, loss: np.ndarray) -> None:
+        def weights_deriv(t: float, weights: np.ndarray) -> np.ndarray:
+            if self.neural_network_gradient_wrt_weights is None:
+                return np.zeros_like(weights)
+            weight_derivative: np.ndarray = self.learning_rate[step] @ (self.neural_network_gradient_wrt_weights.T @ loss)
+            projected_weights: np.ndarray = self.proj(weight_derivative, weights, self.weight_bounds)
+            return projected_weights
+        
+        self.weights = integrate_step(self.weights, step, self.time_step_delta, weights_deriv)
+
+>>>>>>> parent of ed2ed2d (Merge pull request #14 from cristian1928/copilot/fix-12)
     def proj(self, Theta: np.ndarray, thetaHat: np.ndarray, thetaBar: float) -> np.ndarray:
         max_term: float = max(0.0, np.dot(thetaHat.T, thetaHat) - thetaBar**2)
         dot_term: float = np.dot(thetaHat.T, Theta)
         numerator: np.ndarray = max_term**2 * (dot_term + np.sqrt(dot_term**2 + 1.0)) * thetaHat
         denominator: float = 2.0 * (1.0 + 2.0 * thetaBar)**2 * thetaBar**2
         return Theta - (numerator / denominator)
+<<<<<<< HEAD
+>>>>>>> parent of ed2ed2d (Merge pull request #14 from cristian1928/copilot/fix-12)
+=======
 >>>>>>> parent of ed2ed2d (Merge pull request #14 from cristian1928/copilot/fix-12)
 
     @staticmethod

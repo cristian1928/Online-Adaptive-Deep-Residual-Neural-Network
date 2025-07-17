@@ -238,15 +238,21 @@ def animate() -> FuncAnimation:
 
     fig = plt.figure()
 <<<<<<< HEAD
+<<<<<<< HEAD
     ax = fig.add_subplot(111, projection="3d")
     ax.set_xlabel("X Position (m)")
     ax.set_ylabel("Y Position (m)")
     ax.set_zlabel("Z Position (m)")  # 3D axes have set_zlabel
 =======
+=======
+>>>>>>> parent of ed2ed2d (Merge pull request #14 from cristian1928/copilot/fix-12)
     ax = fig.add_subplot(111, projection='3d')  # type: ignore
     ax.set_xlabel('X Position (m)')
     ax.set_ylabel('Y Position (m)')
     ax.set_zlabel('Z Position (m)')  # type: ignore
+<<<<<<< HEAD
+>>>>>>> parent of ed2ed2d (Merge pull request #14 from cristian1928/copilot/fix-12)
+=======
 >>>>>>> parent of ed2ed2d (Merge pull request #14 from cristian1928/copilot/fix-12)
 
     position_data: List[pd.DataFrame] = agents_state_data + [target_state_data]
@@ -274,7 +280,11 @@ def animate() -> FuncAnimation:
     legend = ax.legend(loc='upper right', prop={'size': 7})
     legend.get_frame().set_linewidth(0.5)
 <<<<<<< HEAD
+<<<<<<< HEAD
     time_text = ax.text2D(0.02, 0.95, "", transform=ax.transAxes)  # 3D axes have text2D
+=======
+    time_text = ax.text2D(0.02, 0.95, '', transform=ax.transAxes)  # type: ignore
+>>>>>>> parent of ed2ed2d (Merge pull request #14 from cristian1928/copilot/fix-12)
 =======
     time_text = ax.text2D(0.02, 0.95, '', transform=ax.transAxes)  # type: ignore
 >>>>>>> parent of ed2ed2d (Merge pull request #14 from cristian1928/copilot/fix-12)
@@ -294,6 +304,7 @@ def animate() -> FuncAnimation:
             agent_points[i].set_3d_properties([data['Position Z'][frame]])  # type: ignore
 
 <<<<<<< HEAD
+<<<<<<< HEAD
         target_line.set_data(
             target_state_data["Position X"][start_idx : frame + 1],
             target_state_data["Position Y"][start_idx : frame + 1],
@@ -306,10 +317,15 @@ def animate() -> FuncAnimation:
         )
         target_point.set_3d_properties([target_state_data["Position Z"][frame]])  # 3D point method
 =======
+=======
+>>>>>>> parent of ed2ed2d (Merge pull request #14 from cristian1928/copilot/fix-12)
         target_line.set_data(target_state_data['Position X'][start_idx:frame+1], target_state_data['Position Y'][start_idx:frame+1])
         target_line.set_3d_properties(target_state_data['Position Z'][start_idx:frame+1])  # type: ignore
         target_point.set_data([target_state_data['Position X'][frame]], [target_state_data['Position Y'][frame]])
         target_point.set_3d_properties([target_state_data['Position Z'][frame]])  # type: ignore
+<<<<<<< HEAD
+>>>>>>> parent of ed2ed2d (Merge pull request #14 from cristian1928/copilot/fix-12)
+=======
 >>>>>>> parent of ed2ed2d (Merge pull request #14 from cristian1928/copilot/fix-12)
 
         return agent_lines + agent_points + [target_line, target_point, time_text]
@@ -319,6 +335,7 @@ def animate() -> FuncAnimation:
     plt.tight_layout()
     plt.show()
     return FuncAnimation(fig, update, frames=range(0, num_frames, max(1, num_frames//200)), blit=False, interval=75)
+<<<<<<< HEAD
 
 def compute_tracking_error() -> float:
     """Compute the RMS tracking error norm from the simulation data.
@@ -337,6 +354,8 @@ def compute_tracking_error() -> float:
 
     return rms_error
 
+=======
+>>>>>>> parent of ed2ed2d (Merge pull request #14 from cristian1928/copilot/fix-12)
 
 def results() -> None:
     close_all_files()
