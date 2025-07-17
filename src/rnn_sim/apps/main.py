@@ -4,15 +4,15 @@ from typing import Any, Dict, List
 import matplotlib
 import numpy as np
 
-import dynamics
-from data_manager import (
+from ..core import dynamics
+from ..core.entity import Agent, Target
+from ..io.data_manager import (
     close_all_files,
     compute_tracking_error,
     results,
     save_nn_to_csv,
     save_state_to_csv,
 )
-from entity import Agent, Target
 
 
 def run_pipeline(config: Dict[str, Any], headless: bool = True) -> float:
@@ -71,6 +71,12 @@ def run_simulation(config: Dict[str, Any]) -> None:
 
 
 if __name__ == "__main__":
-    with open("config.json", "r") as config_file:
+    import argparse
+
+    parser = argparse.ArgumentParser(description="Run RNN simulation")
+    parser.add_argument("--config", default="config.json", help="Path to configuration file")
+    args = parser.parse_args()
+
+    with open(args.config, "r") as config_file:
         config: Dict[str, Any] = json.load(config_file)
     run_simulation(config)

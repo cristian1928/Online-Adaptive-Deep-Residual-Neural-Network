@@ -2,7 +2,7 @@ from typing import Any, Callable, Dict, List, NamedTuple, Optional, Tuple
 
 import numpy as np
 
-from integrate import integrate_step
+from .integrate import integrate_step
 
 
 class ForwardPassResult(NamedTuple):

@@ -2,9 +2,9 @@ from typing import Any, Callable, Dict, cast
 
 import numpy as np
 
-import dynamics
-from integrate import integrate_step
-from neural_network import NeuralNetwork
+from . import dynamics
+from .integrate import integrate_step
+from .neural_network import NeuralNetwork
 
 
 class Entity:
