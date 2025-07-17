@@ -1,6 +1,7 @@
 """Test memory optimization by checking for pre-allocated arrays."""
 
 import numpy as np
+from numpy.typing import NDArray
 from src.core.neural_network import NeuralNetwork
 from src.core.entity import Agent, Target
 from src.simulation.dynamics import attitude_mrp, chua, trophic_dynamics
@@ -66,7 +67,7 @@ def test_agent_preallocation() -> None:
 
     # Create target and agent
     target_pos = np.array([40.0, 9.0, 2.0])
-    time_steps = int(config['final_time'] / config['time_step_delta'])
+    time_steps = int(float(config['final_time']) / float(config['time_step_delta']))
     target = Target(target_pos, time_steps, config)
     
     agent_pos = np.array([0.0, 0.0, 0.0])
