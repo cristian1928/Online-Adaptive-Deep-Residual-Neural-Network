@@ -29,24 +29,20 @@ class Agent(Entity):
         self.tracking_error: NDArray[np.float64] = np.zeros(self.num_states)
         self.neural_network: NeuralNetwork = NeuralNetwork(self._input_func, config)
         self.neural_network_output: NDArray[np.float64] = np.zeros(self.num_states)
-        
-        # Pre-allocate temporary arrays to avoid reshaping in compute_control_output
-        self._temp_loss_reshaped: NDArray[np.float64] = np.zeros((self.num_states, 1))
-        self._temp_nn_output_flat: NDArray[np.float64] = np.zeros(self.num_states)
 
     def _input_func(self, step: int) -> NDArray[np.float64]: return self.target.positions[:, step - 1]
 
     def compute_control_output(self, step: int) -> None:
-        # Compute tracking error (in-place operation)
-        self.tracking_error[:] = (self.target.positions[:, step - 1] - self.positions[:, step - 1])
+        # Compute tracking error
+        self.tracking_error = (self.target.positions[:, step - 1] - self.positions[:, step - 1])
 
-        # Neural network update - use pre-allocated arrays to avoid reshaping
-        self._temp_loss_reshaped[:, 0] = self.tracking_error
-        nn_output = self.neural_network.train_step(step, self._temp_loss_reshaped)
-        self.neural_network_output[:] = nn_output[:, 0]  # Extract column without reshaping
+        # Neural network update
+        loss = self.tracking_error
+        nn_output = self.neural_network.train_step(step, loss.reshape(-1, 1))
+        self.neural_network_output = nn_output.reshape(-1)
 
-        # Compute Controller (in-place operation)
-        self.control_output[:] = self.k1 * self.tracking_error + self.neural_network_output
+        # Compute Controller
+        self.control_output = self.k1*self.tracking_error + self.neural_network_output
 
     def update_dynamics(self, step: int) -> None: 
         def control_wrapper(t: float, y: NDArray[np.float64] | float) -> NDArray[np.float64] | float:
