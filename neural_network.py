@@ -1,8 +1,18 @@
-from typing import Any, Callable, Dict, List, Optional, Tuple
+from typing import Any, Callable, Dict, List, NamedTuple, Optional, Tuple
 
 import numpy as np
 
 from integrate import integrate_step
+
+
+class ForwardPassResult(NamedTuple):
+    """Result of a forward pass through the neural network."""
+
+    weight_index: int
+    neural_network_output: np.ndarray
+    activated_layers_blocks: List[List[np.ndarray]]
+    unactivated_layers_blocks: List[List[np.ndarray]]
+    transposed_weights_blocks: List[List[np.ndarray]]
 
 
 class NeuralNetwork:
@@ -31,6 +41,7 @@ class NeuralNetwork:
         self.learning_rate: np.ndarray = (
             config["initial_learning_rate"] * np.eye(np.size(self.weights))
         )[None, :, :].repeat(self.time_steps, axis=0)
+        self.current_step: int = 0
 
     def initialize_weights(self) -> None:
         activation_to_variance: Dict[str, int] = {
@@ -163,11 +174,7 @@ class NeuralNetwork:
 
         return gradient, product
 
-    def _run_forward_pass(
-        self, step: int
-    ) -> Tuple[
-        int, np.ndarray, List[List[np.ndarray]], List[List[np.ndarray]], List[List[np.ndarray]]
-    ]:
+    def _run_forward_pass(self, step: int) -> ForwardPassResult:
         weight_index: int = 0
         neural_network_output: np.ndarray = np.zeros(self.num_outputs).reshape(-1, 1)
         activated_layers_blocks: List[List[np.ndarray]] = [[] for _ in range(self.num_blocks + 1)]
@@ -190,12 +197,12 @@ class NeuralNetwork:
             )
             neural_network_output += unactivated_layers_blocks[block_index][-1]
 
-        return (
-            weight_index,
-            neural_network_output,
-            activated_layers_blocks,
-            unactivated_layers_blocks,
-            transposed_weights_blocks,
+        return ForwardPassResult(
+            weight_index=weight_index,
+            neural_network_output=neural_network_output,
+            activated_layers_blocks=activated_layers_blocks,
+            unactivated_layers_blocks=unactivated_layers_blocks,
+            transposed_weights_blocks=transposed_weights_blocks,
         )
 
     def _run_backward_pass(
@@ -224,9 +231,9 @@ class NeuralNetwork:
                 total_gradient = np.hstack((block_gradient, total_gradient))
 
             if block_index > 0:
-                block_output: np.ndarray = sum(  # type: ignore[assignment]
-                    unactivated_layers_blocks[i][-1] for i in range(block_index)
-                )
+                block_output = unactivated_layers_blocks[0][-1]
+                for i in range(1, block_index):
+                    block_output = block_output + unactivated_layers_blocks[i][-1]
                 preactivation_derivative: np.ndarray = (
                     self.apply_activation_function_derivative_and_bias(
                         block_output, self.shortcut_activation_function
@@ -247,86 +254,83 @@ class NeuralNetwork:
 
     def predict(self, step: int) -> np.ndarray:
         self.learning_rate[step] = self.learning_rate[step - 1]
-        _, neural_network_output, _, _, _ = self._run_forward_pass(step)
-        return neural_network_output
+        forward_result = self._run_forward_pass(step)
+        return forward_result.neural_network_output
 
-    def train_step(self, step: int, loss: np.ndarray) -> np.ndarray:
-        (
-            _,
-            neural_network_output,
-            activated_layers_blocks,
-            unactivated_layers_blocks,
-            transposed_weights_blocks,
-        ) = self._run_forward_pass(step)
-        total_gradient: np.ndarray = self._run_backward_pass(
-            activated_layers_blocks, unactivated_layers_blocks, transposed_weights_blocks
+    def train_step(self, step: int, loss_gradient: np.ndarray) -> np.ndarray:
+        forward_result = self._run_forward_pass(step)
+        total_gradient = self._run_backward_pass(
+            forward_result.activated_layers_blocks,
+            forward_result.unactivated_layers_blocks,
+            forward_result.transposed_weights_blocks,
         )
         self.neural_network_gradient_wrt_weights = total_gradient
-        self.update_neural_network_weights(step, loss)
+        self.update_neural_network_weights(step, loss_gradient)
         self.update_learning_rate(step)
-        return neural_network_output
+        return forward_result.neural_network_output
 
     def set_weights(self, weights: np.ndarray) -> None:
         self.weights = weights.copy()
 
     def forward_raw(self, step: int) -> np.ndarray:
-        _, neural_network_output, _, _, _ = self._run_forward_pass(step)
-        return neural_network_output
+        forward_result = self._run_forward_pass(step)
+        return forward_result.neural_network_output
 
     def jacobian_raw(self, step: int) -> np.ndarray:
-        (
-            _,
-            neural_network_output,
-            activated_layers_blocks,
-            unactivated_layers_blocks,
-            transposed_weights_blocks,
-        ) = self._run_forward_pass(step)
-        total_gradient: np.ndarray = self._run_backward_pass(
-            activated_layers_blocks, unactivated_layers_blocks, transposed_weights_blocks
+        forward_result = self._run_forward_pass(step)
+        total_gradient = self._run_backward_pass(
+            forward_result.activated_layers_blocks,
+            forward_result.unactivated_layers_blocks,
+            forward_result.transposed_weights_blocks,
         )
         return total_gradient
 
-    def update_learning_rate(self, step: int) -> None:
-        def learning_rate_deriv(t: float, gamma: np.ndarray) -> np.ndarray:
-            if self.neural_network_gradient_wrt_weights is None:
-                return np.zeros_like(gamma)
-            normalized_neural_network_gradient_wrt_weights: np.ndarray = (
-                self.neural_network_gradient_wrt_weights
-                / (
-                    1.0
-                    + np.linalg.norm(
-                        self.neural_network_gradient_wrt_weights.T
-                        @ self.neural_network_gradient_wrt_weights,
-                        "fro",
-                    )
-                    ** 2
-                )
-            )
-            mat: np.ndarray = normalized_neural_network_gradient_wrt_weights @ gamma
-            return (  # type: ignore[no-any-return]
-                -mat.T @ mat
-                + (self.beta_1 * np.eye(gamma.shape[0]))
-                + (self.beta_2 * gamma)
-                - (self.beta_3 * gamma @ gamma)
-            )
+    def _normalize_gradient(self, gradient: np.ndarray) -> np.ndarray:
+        """Normalize the gradient using the Frobenius norm."""
+        frobenius_norm_squared = np.linalg.norm(gradient.T @ gradient, "fro") ** 2
+        normalization_factor = 1.0 + frobenius_norm_squared
+        return gradient / normalization_factor
 
+    def _compute_learning_rate_derivative(self, gamma: np.ndarray) -> np.ndarray:
+        """Compute the derivative for learning rate update."""
+        if self.neural_network_gradient_wrt_weights is None:
+            return np.zeros_like(gamma)
+
+        normalized_gradient = self._normalize_gradient(self.neural_network_gradient_wrt_weights)
+        matrix_product = normalized_gradient @ gamma
+
+        quadratic_term = -matrix_product.T @ matrix_product
+        linear_term = self.beta_1 * np.eye(gamma.shape[0]) + self.beta_2 * gamma
+        nonlinear_term = -self.beta_3 * gamma @ gamma
+
+        return quadratic_term + linear_term + nonlinear_term
+
+    def update_learning_rate(self, step: int) -> None:
         self.learning_rate[step] = integrate_step(
-            self.learning_rate[step - 1], step, self.time_step_delta, learning_rate_deriv  # type: ignore[arg-type]
+            self.learning_rate[step - 1],
+            step,
+            self.time_step_delta,
+            lambda t, gamma: self._compute_learning_rate_derivative(gamma),
         )
 
-    def update_neural_network_weights(self, step: int, loss: np.ndarray) -> None:
-        def weights_deriv(t: float, weights: np.ndarray) -> np.ndarray:
-            if self.neural_network_gradient_wrt_weights is None:
-                return np.zeros_like(weights)
-            weight_derivative: np.ndarray = self.learning_rate[step] @ (
-                self.neural_network_gradient_wrt_weights.T @ loss
-            )
-            projected_weights: np.ndarray = self.proj(
-                weight_derivative, weights, self.weight_bounds
-            )
-            return projected_weights
+    def _compute_weight_derivative(self, loss_gradient: np.ndarray) -> np.ndarray:
+        """Compute the derivative for weight update."""
+        if self.neural_network_gradient_wrt_weights is None:
+            return np.zeros_like(self.weights)
 
-        self.weights = integrate_step(self.weights, step, self.time_step_delta, weights_deriv)  # type: ignore[assignment,arg-type]
+        gradient_loss_product = self.neural_network_gradient_wrt_weights.T @ loss_gradient
+        weight_derivative = self.learning_rate[self.current_step] @ gradient_loss_product
+        projected_weights = self.proj(weight_derivative, self.weights, self.weight_bounds)
+        return projected_weights
+
+    def update_neural_network_weights(self, step: int, loss_gradient: np.ndarray) -> None:
+        self.current_step = step  # Store current step for use in derivative computation
+        self.weights = integrate_step(
+            self.weights,
+            step,
+            self.time_step_delta,
+            lambda t, weights: self._compute_weight_derivative(loss_gradient),
+        )
 
     def proj(self, theta: np.ndarray, theta_hat: np.ndarray, theta_bar: float) -> np.ndarray:
         max_term: float = max(0.0, np.dot(theta_hat.T, theta_hat) - theta_bar**2)

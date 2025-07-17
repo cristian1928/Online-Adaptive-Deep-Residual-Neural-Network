@@ -1,4 +1,4 @@
-from typing import Any, Callable, Dict
+from typing import Any, Callable, Dict, cast
 
 import numpy as np
 
@@ -68,10 +68,13 @@ class Target(Entity):
         )
 
     def update_dynamics(self, step: int) -> None:
+        dynamics_func = cast(
+            Callable[[float, np.ndarray], np.ndarray], lambda t, pos: self.dynamics_function(pos)
+        )
         result = integrate_step(
             self.positions[:, step - 1],
             step,
             self.time_step_delta,
-            lambda t, pos: self.dynamics_function(pos),  # type: ignore[arg-type]
+            dynamics_func,
         )
         self.positions[:, step] = result

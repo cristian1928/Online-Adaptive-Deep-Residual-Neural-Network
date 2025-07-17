@@ -311,7 +311,7 @@ def animate() -> FuncAnimation:
     ax = fig.add_subplot(111, projection="3d")
     ax.set_xlabel("X Position (m)")
     ax.set_ylabel("Y Position (m)")
-    ax.set_zlabel("Z Position (m)")  # type: ignore[attr-defined]
+    ax.set_zlabel("Z Position (m)")  # 3D axes have set_zlabel
 
     position_data: List[pd.DataFrame] = agents_state_data + [target_state_data]
     x_min, x_max = min(data["Position X"].min() for data in position_data), max(
@@ -328,7 +328,7 @@ def animate() -> FuncAnimation:
     x_range, y_range, z_range = x_max - x_min, y_max - y_min, z_max - z_min
     ax.set_xlim(x_min - margin * x_range, x_max + margin * x_range)
     ax.set_ylim(y_min - margin * y_range, y_max + margin * y_range)
-    ax.set_zlim(z_min - margin * z_range, z_max + margin * z_range)  # type: ignore
+    ax.set_zlim(z_min - margin * z_range, z_max + margin * z_range)  # 3D axes have set_zlim
 
     agent_lines: List[Any] = []
     agent_points: List[Any] = []
@@ -343,7 +343,7 @@ def animate() -> FuncAnimation:
 
     legend = ax.legend(loc="upper right", prop={"size": 7})
     legend.get_frame().set_linewidth(0.5)
-    time_text = ax.text2D(0.02, 0.95, "", transform=ax.transAxes)  # type: ignore
+    time_text = ax.text2D(0.02, 0.95, "", transform=ax.transAxes)  # 3D axes have text2D
 
     trail_length: int = 3500
 
@@ -365,11 +365,13 @@ def animate() -> FuncAnimation:
             target_state_data["Position X"][start_idx : frame + 1],
             target_state_data["Position Y"][start_idx : frame + 1],
         )
-        target_line.set_3d_properties(target_state_data["Position Z"][start_idx : frame + 1])  # type: ignore
+        target_line.set_3d_properties(
+            target_state_data["Position Z"][start_idx : frame + 1]
+        )  # 3D line method
         target_point.set_data(
             [target_state_data["Position X"][frame]], [target_state_data["Position Y"][frame]]
         )
-        target_point.set_3d_properties([target_state_data["Position Z"][frame]])  # type: ignore
+        target_point.set_3d_properties([target_state_data["Position Z"][frame]])  # 3D point method
 
         return agent_lines + agent_points + [target_line, target_point, time_text]
 
