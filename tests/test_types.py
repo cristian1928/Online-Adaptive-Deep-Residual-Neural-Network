@@ -13,5 +13,3 @@ def test_type_hints_are_clean() -> None:
     assert result.returncode == 0, (
         f"Type‑hint errors detected:\n{result.stdout}\n{result.stderr}"
     )
-
-test_type_hints_are_clean()
