@@ -39,8 +39,12 @@ def run_simulation(config):
 
     print("\nSimulation completed.")
     close_all_files()
+
+def run_simulation_with_results(config):
+    """Run simulation and generate plots/animations."""
+    run_simulation(config)
     results()
 
 if __name__ == "__main__":
     with open('config.json', 'r') as config_file: config = json.load(config_file)
-    run_simulation(config)
+    run_simulation_with_results(config)
