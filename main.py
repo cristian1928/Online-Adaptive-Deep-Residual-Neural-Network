@@ -20,7 +20,7 @@ def run_simulation(config: dict[str, Any]) -> None:
     num_states: int = config['num_states']
     np.random.seed(config['seed'])
 
-    if 'target_initial_conditions' in config: target_position: NDArray[np.floating[Any]] = np.array(config['target_initial_conditions'])
+    if 'target_initial_conditions' in config: target_position: NDArray[np.float64] = np.array(config['target_initial_conditions'])
     else: 
         dynamics_type = config.get('dynamics_type', 'trophic_dynamics')
         target_position = np.array(dynamics.get_initial_conditions(dynamics_type))
@@ -28,7 +28,7 @@ def run_simulation(config: dict[str, Any]) -> None:
     target: Target = Target(target_position, time_steps, config)
 
     # Initialize agent
-    agent_position: NDArray[np.floating[Any]] = np.zeros(num_states)
+    agent_position: NDArray[np.float64] = np.zeros(num_states)
     agent: Agent = Agent(agent_position, time_steps, config, target, config['ID'])
     agents: list[Agent] = [agent]
 
