@@ -1,10 +1,12 @@
 import numpy as np
+import numpy.typing as npt
+from typing import Dict, List, Callable, Any, Optional
 
 # =================================================
 # Attitude kinematics in Modified Rodrigues Parameters
 # =================================================
-def attitude_mrp(state):
-    def _skew(v):
+def attitude_mrp(state: npt.NDArray[np.floating[Any]]) -> npt.NDArray[np.floating[Any]]:
+    def _skew(v: npt.NDArray[np.floating[Any]]) -> npt.NDArray[np.floating[Any]]:
         x, y, z = v
         return np.array([[ 0, -z,  y], [ z,  0, -x], [-y,  x,  0]])
 
@@ -18,13 +20,13 @@ def attitude_mrp(state):
     tau_b  = np.array([0.0, 0.15, 0.0])      # body torque (N·m)
     omega  = np.linalg.inv(J) @ tau_b        # angular velocity (rad/s)
 
-    r_dot = 0.5 * B @ omega
+    r_dot: npt.NDArray[np.floating[Any]] = 0.5 * B @ omega
     return r_dot
 
 # ================================================
 # Chua double-scroll chaotic circuit (dimensionless)
 # ================================================
-def chua(state):
+def chua(state: npt.NDArray[np.floating[Any]]) -> npt.NDArray[np.floating[Any]]:
     # Initial conditions:  x = 0.2,  y = 0.0,  z = 0.0
     x, y, z = state
     α  = 15.6
@@ -43,7 +45,7 @@ def chua(state):
 # =======================================================
 # Three-tier ecological food-chain model
 # =======================================================
-def trophic_dynamics(state):
+def trophic_dynamics(state: npt.NDArray[np.floating[Any]]) -> npt.NDArray[np.floating[Any]]:
     # Initial conditions:  H=40, P=9, T=2   (population counts or biomass units)
     H, P, T = state
     # Parameters
@@ -59,15 +61,15 @@ def trophic_dynamics(state):
     T_dot = -d_T * T + a_PT * P * T
     return np.array([H_dot, P_dot, T_dot])
 
-def custom(state):
-    return None
+def custom(state: npt.NDArray[np.floating[Any]]) -> npt.NDArray[np.floating[Any]]:
+    return np.zeros_like(state)
 
 # =======================================================
 # Dynamics mapping and configuration system
 # =======================================================
 
-def get_dynamics_function(dynamics_type):
-    dynamics_map = {
+def get_dynamics_function(dynamics_type: str) -> Callable[[npt.NDArray[np.floating[Any]]], npt.NDArray[np.floating[Any]]]:
+    dynamics_map: Dict[str, Callable[[npt.NDArray[np.floating[Any]]], npt.NDArray[np.floating[Any]]]] = {
         "attitude_mrp": attitude_mrp,
         "chua": chua,
         "trophic_dynamics": trophic_dynamics,
@@ -76,8 +78,8 @@ def get_dynamics_function(dynamics_type):
     
     return dynamics_map[dynamics_type]
 
-def get_initial_conditions(dynamics_type):
-    initial_conditions_map = {
+def get_initial_conditions(dynamics_type: str) -> List[float]:
+    initial_conditions_map: Dict[str, List[float]] = {
         "attitude_mrp": [0.25, 0.10, -0.30],  # Modified Rodrigues Parameters (||r|| < 1)
         "chua": [0.2, 0.0, 0.0],  # Chua circuit initial conditions
         "trophic_dynamics": [40, 9, 2],  # Ecological food-chain model (H, P, T)
