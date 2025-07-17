@@ -3,8 +3,13 @@ from __future__ import annotations
 from collections.abc import Callable
 from typing import Any, cast
 
-import numpy as np
+import jax
+import jax.numpy as jnp
+import numpy as np  # Keep for compatibility with typing and specific operations
 from numpy.typing import NDArray
+
+# Enable 64-bit precision in JAX for compatibility with existing code
+jax.config.update("jax_enable_x64", True)  # type: ignore[no-untyped-call]
 
 from ..simulation import dynamics
 from ..simulation.integrate import integrate_step

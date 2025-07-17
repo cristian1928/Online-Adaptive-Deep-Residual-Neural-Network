@@ -2,7 +2,8 @@ import os
 from typing import Any, List, Tuple, cast
 
 import matplotlib.pyplot as plt
-import numpy as np
+import jax.numpy as jnp
+import numpy as np  # Keep for compatibility with matplotlib
 import pandas as pd
 import scienceplots  # type: ignore
 from matplotlib.animation import FuncAnimation

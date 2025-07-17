@@ -3,8 +3,13 @@ from __future__ import annotations
 import json
 from typing import Any
 
-import numpy as np
+import jax
+import jax.numpy as jnp
+import numpy as np  # Keep for compatibility with typing and specific operations
 from numpy.typing import NDArray
+
+# Enable 64-bit precision in JAX for compatibility with existing code
+jax.config.update("jax_enable_x64", True)  # type: ignore[no-untyped-call]
 
 from src.core.entity import Agent, Target
 from src.io.data_manager import close_all_files, save_nn_to_csv, save_state_to_csv
@@ -20,15 +25,15 @@ def run_simulation(config: dict[str, Any]) -> None:
     num_states: int = config['num_states']
     np.random.seed(config['seed'])
 
-    if 'target_initial_conditions' in config: target_position: NDArray[np.float64] = np.array(config['target_initial_conditions'])
+    if 'target_initial_conditions' in config: target_position: NDArray[np.float64] = np.asarray(jnp.array(config['target_initial_conditions']))
     else: 
         dynamics_type = config.get('dynamics_type', 'trophic_dynamics')
-        target_position = np.array(dynamics.get_initial_conditions(dynamics_type))
+        target_position = np.asarray(jnp.array(dynamics.get_initial_conditions(dynamics_type)))
     
     target: Target = Target(target_position, time_steps, config)
 
     # Initialize agent
-    agent_position: NDArray[np.float64] = np.zeros(num_states)
+    agent_position: NDArray[np.float64] = np.asarray(jnp.zeros(num_states))
     agent: Agent = Agent(agent_position, time_steps, config, target, config['ID'])
     agents: list[Agent] = [agent]
 

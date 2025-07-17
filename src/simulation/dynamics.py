@@ -1,7 +1,12 @@
 from typing import Callable, Dict, List
 
-import numpy as np
+import jax
+import jax.numpy as jnp
+import numpy as np  # Keep for compatibility with typing and specific operations
 from numpy.typing import NDArray
+
+# Enable 64-bit precision in JAX for compatibility with existing code
+jax.config.update("jax_enable_x64", True)  # type: ignore[no-untyped-call]
 
 # Pre-allocated arrays for dynamics computations to avoid dynamic allocation
 _TEMP_ARRAYS = {
@@ -14,42 +19,36 @@ _TEMP_ARRAYS = {
 }
 
 # =================================================
-# Attitude kinematics in Modified Rodrigues Parameters
+# Attitude kinematics in Modified Rodrigues Parameters  
 # =================================================
-def attitude_mrp(state: NDArray[np.float64]) -> NDArray[np.float64]:
-    def _skew(v: NDArray[np.float64]) -> NDArray[np.float64]:
-        x, y, z = v
-        # Reuse pre-allocated skew matrix
-        skew_mat = _TEMP_ARRAYS['skew_matrix']
-        skew_mat[0, 0] = 0.0;  skew_mat[0, 1] = -z;  skew_mat[0, 2] = y
-        skew_mat[1, 0] = z;   skew_mat[1, 1] = 0.0;  skew_mat[1, 2] = -x
-        skew_mat[2, 0] = -y;  skew_mat[2, 1] = x;   skew_mat[2, 2] = 0.0
-        return skew_mat
-
-    # Initial conditions:  r = [0.25, 0.10, -0.30]   (‖r‖ < 1)
-    r = state
-    r2 = np.dot(r, r)
+@jax.jit
+def _jit_attitude_mrp_core(r: jnp.ndarray) -> jnp.ndarray:
+    """JIT-compiled core computation for attitude MRP dynamics."""
+    r2 = jnp.dot(r, r)
     
-    # Reuse pre-allocated matrices
-    identity = _TEMP_ARRAYS['identity_3x3']
-    outer_prod = _TEMP_ARRAYS['outer_product']
-    B_mat = _TEMP_ARRAYS['B_matrix']
-    result = _TEMP_ARRAYS['result_3d']
+    # Skew matrix computation
+    x, y, z = r
+    skew_mat = jnp.array([[0.0, -z, y],
+                          [z, 0.0, -x], 
+                          [-y, x, 0.0]])
     
-    # Compute outer product in-place
-    np.outer(r, r, out=outer_prod)
-    
-    # Compute B matrix components in-place
-    B_mat[:] = (1 - r2) * identity + 2 * _skew(r) + 2 * outer_prod
+    # B matrix computation
+    identity = jnp.eye(3)
+    outer_prod = jnp.outer(r, r)
+    B_mat = (1 - r2) * identity + 2 * skew_mat + 2 * outer_prod
 
     # constant body torque  → almost-constant angular momentum
-    J      = np.diag([2.0, 1.2, 1.6])        # inertia tensor (kg·m²)
-    tau_b  = np.array([0.0, 0.15, 0.0])      # body torque (N·m)
-    omega  = np.linalg.inv(J) @ tau_b        # angular velocity (rad/s)
+    J = jnp.diag(jnp.array([2.0, 1.2, 1.6]))        # inertia tensor (kg·m²)
+    tau_b = jnp.array([0.0, 0.15, 0.0])      # body torque (N·m)
+    omega = jnp.linalg.inv(J) @ tau_b        # angular velocity (rad/s)
 
-    # Compute result in-place
-    result[:] = 0.5 * (B_mat @ omega)
-    return result.copy()  # Return copy to avoid mutation
+    return 0.5 * (B_mat @ omega)  # type: ignore[no-any-return]
+
+def attitude_mrp(state: NDArray[np.float64]) -> NDArray[np.float64]:
+    # Initial conditions:  r = [0.25, 0.10, -0.30]   (‖r‖ < 1)
+    r = jnp.asarray(state)
+    result = _jit_attitude_mrp_core(r)
+    return np.asarray(result)
 
 # ================================================
 # Chua double-scroll chaotic circuit (dimensionless)
@@ -63,7 +62,7 @@ def chua(state: NDArray[np.float64]) -> NDArray[np.float64]:
     m1 = -0.714
 
     # piece-wise linear Chua diode
-    g = m1*x + 0.5*(m0 - m1)*(abs(x + 1) - abs(x - 1))
+    g = m1*x + 0.5*(m0 - m1)*(jnp.abs(x + 1) - jnp.abs(x - 1))
 
     # Reuse pre-allocated result array
     result = _TEMP_ARRAYS['result_3d']

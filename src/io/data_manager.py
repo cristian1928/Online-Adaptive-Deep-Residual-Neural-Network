@@ -4,7 +4,8 @@ from collections import defaultdict
 from csv import DictWriter
 from typing import TYPE_CHECKING, Any, Dict, List, TextIO
 
-import numpy as np
+import jax.numpy as jnp
+import numpy as np  # Keep for compatibility with specific operations
 
 if TYPE_CHECKING:
     from src.core.entity import Agent, Target

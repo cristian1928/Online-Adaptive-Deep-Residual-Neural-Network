@@ -3,10 +3,37 @@ from __future__ import annotations
 from collections.abc import Callable
 from typing import Any
 
-import numpy as np
+import jax
+import jax.numpy as jnp
+import numpy as np  # Keep for compatibility with typing and specific operations
 from numpy.typing import NDArray
 
+# Enable 64-bit precision in JAX for compatibility with existing code
+jax.config.update("jax_enable_x64", True)  # type: ignore[no-untyped-call]
+
 from ..simulation.integrate import integrate_step
+
+
+# JIT-compiled helper functions for performance-critical mathematical operations
+@jax.jit
+def _jit_matrix_multiply(a: jnp.ndarray, b: jnp.ndarray) -> jnp.ndarray:
+    """JIT-compiled matrix multiplication."""
+    return a @ b
+
+@jax.jit
+def _jit_kronecker_product(a: jnp.ndarray, b: jnp.ndarray) -> jnp.ndarray:
+    """JIT-compiled Kronecker product."""
+    return jnp.kron(a, b)
+
+@jax.jit
+def _jit_vector_norm(x: jnp.ndarray) -> jnp.ndarray:
+    """JIT-compiled Frobenius norm computation."""
+    return jnp.linalg.norm(x, 'fro')  # type: ignore[no-any-return]
+
+@jax.jit  
+def _jit_eye_with_scaling(size: int, beta: float) -> jnp.ndarray:
+    """JIT-compiled identity matrix with scaling."""
+    return beta * jnp.eye(size)
 
 
 class NeuralNetwork:
@@ -32,8 +59,9 @@ class NeuralNetwork:
         self.beta_3: float = (min_lr * max_lr) / (max_lr**2 - min_lr**2)
 
         initial_lr = config['initial_learning_rate']
-        eye_matrix = np.eye(np.size(self.weights))
-        self.learning_rate: NDArray[np.float64] = ((initial_lr * eye_matrix)[None, :, :].repeat(self.time_steps, axis=0))
+        eye_matrix = jnp.eye(jnp.size(self.weights))
+        lr_jax = ((initial_lr * eye_matrix)[None, :, :].repeat(self.time_steps, axis=0))
+        self.learning_rate: NDArray[np.float64] = np.array(lr_jax, copy=True)  # Force numpy copy
         
         # Pre-allocate temporary arrays to avoid dynamic allocation during forward/backward passes
         self._preallocate_temporary_arrays()
@@ -54,30 +82,26 @@ class NeuralNetwork:
             # Output layer
             total_weight_size += (self.num_neurons + 1) * self.num_outputs
         
-        # Allocate all weights at once
-        all_weights = np.zeros((total_weight_size, 1))
-        current_idx = 0
+        # Build weights using concatenation instead of in-place assignment for JAX compatibility
+        weight_blocks = []
         
         for block in range(self.num_blocks + 1):
             input_size = self.num_inputs if block == 0 else self.num_outputs
             
             # First layer
-            layer_size = (input_size + 1) * self.num_neurons
-            all_weights[current_idx:current_idx + layer_size, 0] = self.generate_initialized_weights(input_size, self.num_neurons, inner_variance).flatten()
-            current_idx += layer_size
+            weight_blocks.append(self.generate_initialized_weights(input_size, self.num_neurons, inner_variance).flatten())
             
             # Hidden layers
             for _ in range(self.num_layers - 1):
-                layer_size = (self.num_neurons + 1) * self.num_neurons
-                all_weights[current_idx:current_idx + layer_size, 0] = self.generate_initialized_weights(self.num_neurons, self.num_neurons, inner_variance).flatten()
-                current_idx += layer_size
+                weight_blocks.append(self.generate_initialized_weights(self.num_neurons, self.num_neurons, inner_variance).flatten())
             
             # Output layer
-            layer_size = (self.num_neurons + 1) * self.num_outputs
-            all_weights[current_idx:current_idx + layer_size, 0] = self.generate_initialized_weights(self.num_neurons, self.num_outputs, output_variance).flatten()
-            current_idx += layer_size
+            weight_blocks.append(self.generate_initialized_weights(self.num_neurons, self.num_outputs, output_variance).flatten())
         
-        self.weights: NDArray[np.float64] = all_weights
+        # Concatenate all weights at once
+        all_weights = jnp.concatenate(weight_blocks).reshape(-1, 1)
+        
+        self.weights: NDArray[np.float64] = np.asarray(all_weights)  # Convert to numpy for type compatibility
 
     def _preallocate_temporary_arrays(self) -> None:
         """Pre-allocate all temporary arrays used in forward/backward propagation to avoid dynamic allocation."""
@@ -116,8 +140,8 @@ class NeuralNetwork:
             self._temp_weight_matrices.append(np.zeros((max_cols, max_rows)))
         
         # Pre-allocate identity matrices for kronecker products (most common optimization)
-        self._temp_kron_eye_neurons: NDArray[np.float64] = np.eye(self.num_neurons)
-        self._temp_kron_eye_outputs: NDArray[np.float64] = np.eye(self.num_outputs, dtype=np.float64)
+        self._temp_kron_eye_neurons: NDArray[np.float64] = np.asarray(jnp.eye(self.num_neurons))
+        self._temp_kron_eye_outputs: NDArray[np.float64] = np.asarray(jnp.eye(self.num_outputs, dtype=jnp.float64))
         
         # Pre-allocate neural network output to avoid repeated allocation in forward pass
         self._temp_neural_network_output: NDArray[np.float64] = np.zeros((self.num_outputs, 1))
@@ -126,10 +150,10 @@ class NeuralNetwork:
         # Applies either Xavier (1/input) or He (2/input) initialization
         variance = variance_factor / input_size  
         # input_size + 1 accounts for bias term
-        return np.random.normal(0, np.sqrt(variance), output_size * (input_size + 1)).reshape(-1, 1)
+        return np.asarray(jnp.array(np.random.normal(0, jnp.sqrt(variance), output_size * (input_size + 1)).reshape(-1, 1)))
 
     def get_input_with_bias(self, step: int) -> NDArray[np.float64]: 
-        return np.append(self.input_func(step), 1).reshape(-1, 1)
+        return np.asarray(jnp.append(self.input_func(step), 1).reshape(-1, 1))
 
     def construct_transposed_weight_matrices(self, weight_index: int) -> tuple[int, list[NDArray[np.float64]]]:
         weight_matrices: list[NDArray[np.float64]] = []
@@ -193,18 +217,18 @@ class NeuralNetwork:
                 transposed_output = activated_layers[layer_index].T
                 
                 if layer_index == self.num_layers:
-                    current_gradient = np.asarray(np.kron(self._temp_kron_eye_outputs, transposed_output),dtype=np.float64)
+                    current_gradient = np.asarray(_jit_kronecker_product(self._temp_kron_eye_outputs, transposed_output), dtype=np.float64)
                     
                     if outer_product is not None: gradient = outer_product @ current_gradient
                     else: gradient = current_gradient
                     product = transposed_weight_matrices[layer_index] @ self.apply_activation_function_derivative_and_bias(unactivated_layers[layer_index - 1], self.outer_layer_activation_function)
                 else:
-                    kron_product = np.asarray(np.kron(self._temp_kron_eye_neurons, transposed_output), dtype=np.float64)
+                    kron_product = np.asarray(_jit_kronecker_product(self._temp_kron_eye_neurons, transposed_output), dtype=np.float64)
                     
                     if outer_product is None: layer_gradient = product @ kron_product if product is not None else np.zeros_like(kron_product)
                     else: layer_gradient = outer_product @ product @ kron_product if product is not None else np.zeros_like(kron_product)
                     
-                    gradient = np.hstack((layer_gradient, gradient)) if gradient is not None else layer_gradient
+                    gradient = np.asarray(jnp.hstack((layer_gradient, gradient))) if gradient is not None else layer_gradient
                     
                     if layer_index != 0 and product is not None: 
                         product = product @ transposed_weight_matrices[layer_index] @ self.apply_activation_function_derivative_and_bias(unactivated_layers[layer_index - 1], self.inner_layer_activation_function)
@@ -242,7 +266,7 @@ class NeuralNetwork:
             if block_index == self.num_blocks: 
                 total_gradient = block_gradient
             else: 
-                total_gradient = np.hstack((block_gradient, total_gradient)) if total_gradient is not None else block_gradient
+                total_gradient = np.asarray(jnp.hstack((block_gradient, total_gradient))) if total_gradient is not None else block_gradient
             if block_index > 0:
                 block_output = sum(unactivated_layers_blocks[i][-1] for i in range(block_index))
                 if isinstance(block_output, (int, float)):
@@ -251,9 +275,9 @@ class NeuralNetwork:
                 preactivation_derivative = self.apply_activation_function_derivative_and_bias(block_output, self.shortcut_activation_function)
                 update_term = inner_product @ transposed_weights_blocks[block_index][0] @ preactivation_derivative
                 if block_index == self.num_blocks: 
-                    outer_product = np.eye(self.num_outputs) + update_term
+                    outer_product = np.asarray(jnp.eye(self.num_outputs) + update_term)
                 else: 
-                    outer_product = outer_product @ (np.eye(self.num_outputs) + update_term) if outer_product is not None else np.eye(self.num_outputs) + update_term
+                    outer_product = np.asarray(outer_product @ (jnp.eye(self.num_outputs) + update_term)) if outer_product is not None else np.asarray(jnp.eye(self.num_outputs) + update_term)
         
         if total_gradient is None:
             total_gradient = np.zeros((1, 1))  # fallback case
@@ -286,81 +310,85 @@ class NeuralNetwork:
 
     def update_learning_rate(self, step: int) -> None:
         def learning_rate_deriv(t: float, gamma: NDArray[np.float64] | float) -> NDArray[np.float64] | float:
-            gamma_arr = np.asarray(gamma)
+            gamma_arr = jnp.asarray(gamma)
             if self.neural_network_gradient_wrt_weights is None:
-                return np.zeros_like(gamma_arr)
-            normalized_neural_network_gradient_wrt_weights = self.neural_network_gradient_wrt_weights / (1.0 + np.linalg.norm(self.neural_network_gradient_wrt_weights.T @ self.neural_network_gradient_wrt_weights, 'fro')**2)
+                return np.asarray(jnp.zeros_like(gamma_arr))
+            norm_val = _jit_vector_norm(self.neural_network_gradient_wrt_weights.T @ self.neural_network_gradient_wrt_weights)
+            normalized_neural_network_gradient_wrt_weights = self.neural_network_gradient_wrt_weights / (1.0 + norm_val**2)
             mat = normalized_neural_network_gradient_wrt_weights @ gamma_arr
-            result = - mat.T @ mat + (self.beta_1 * np.eye(gamma_arr.shape[0])) + (self.beta_2 * gamma_arr) - (self.beta_3 * gamma_arr @ gamma_arr)
-            return result if isinstance(gamma, np.ndarray) else float(result)
+            eye_term = _jit_eye_with_scaling(gamma_arr.shape[0], self.beta_1)
+            result = - mat.T @ mat + eye_term + (self.beta_2 * gamma_arr) - (self.beta_3 * gamma_arr @ gamma_arr)
+            return np.asarray(result) if isinstance(gamma, np.ndarray) else float(result)
         
         new_lr = integrate_step(self.learning_rate[step - 1], step, self.time_step_delta, learning_rate_deriv)
         self.learning_rate[step] = np.asarray(new_lr)
 
     def update_neural_network_weights(self, step: int, loss: NDArray[np.float64]) -> None:
         def weights_deriv(t: float, weights: NDArray[np.float64] | float) -> NDArray[np.float64] | float:
-            weights_arr = np.asarray(weights)
+            weights_arr = jnp.asarray(weights)
             if self.neural_network_gradient_wrt_weights is None:
-                return np.zeros_like(weights_arr)
+                return np.asarray(jnp.zeros_like(weights_arr))
             weight_derivative = self.learning_rate[step] @ (self.neural_network_gradient_wrt_weights.T @ loss)
-            projected_weights = self.proj(weight_derivative, weights_arr, self.weight_bounds)
+            projected_weights = self.proj(weight_derivative, np.asarray(weights_arr), self.weight_bounds)
             return projected_weights if isinstance(weights, np.ndarray) else float(projected_weights)
         
         new_weights = integrate_step(self.weights, step, self.time_step_delta, weights_deriv)
         self.weights = np.asarray(new_weights)
 
     def proj(self, Theta: NDArray[np.float64], thetaHat: NDArray[np.float64], thetaBar: float) -> NDArray[np.float64]:
-        max_term = max(0.0, (np.dot(thetaHat.T, thetaHat)).item() - thetaBar**2)
-        dot_term = (np.dot(thetaHat.T, Theta)).item()
-        numerator = max_term**2 * (dot_term + np.sqrt(dot_term**2 + 1.0)) * thetaHat
+        max_term = max(0.0, (jnp.dot(thetaHat.T, thetaHat)).item() - thetaBar**2)
+        dot_term = (jnp.dot(thetaHat.T, Theta)).item()
+        numerator = max_term**2 * (dot_term + jnp.sqrt(dot_term**2 + 1.0)) * thetaHat
         denominator = 2.0 * (1.0 + 2.0 * thetaBar)**2 * thetaBar**2
         result = Theta - (numerator / denominator)
         return np.asarray(result)
 
     @staticmethod
     def apply_activation_function_and_bias(x: NDArray[np.float64], activation_function: str) -> NDArray[np.float64]:
+        x_jax = jnp.asarray(x)
         if activation_function == 'tanh': 
-            result = np.tanh(x)
+            result_jax = jnp.tanh(x_jax)
         elif activation_function == 'swish': 
-            result = x * (1.0 / (1.0 + np.exp(-x)))
+            result_jax = x_jax * (1.0 / (1.0 + jnp.exp(-x_jax)))
         elif activation_function == 'identity': 
-            result = x
+            result_jax = x_jax
         elif activation_function == 'relu': 
-            result = np.maximum(0, x)
+            result_jax = jnp.maximum(0, x_jax)
         elif activation_function == 'sigmoid': 
-            result = 1 / (1 + np.exp(-x))
+            result_jax = 1 / (1 + jnp.exp(-x_jax))
         elif activation_function == 'leaky_relu': 
-            result = np.where(x > 0, x, 0.01 * x)
+            result_jax = jnp.where(x_jax > 0, x_jax, 0.01 * x_jax)
         else:
             raise ValueError(f"Unknown activation function: {activation_function}")
-        return np.vstack((result, [[1]]))
+        return np.asarray(jnp.vstack((result_jax, jnp.array([[1]]))))  # Fix JAX deprecation warning
 
     @staticmethod
     def apply_activation_function_derivative_and_bias(x: NDArray[np.float64], activation_function: str) -> NDArray[np.float64]:
+        x_jax = jnp.asarray(x)
         if activation_function == 'tanh': 
-            result = 1 - np.tanh(x)**2
+            result_jax = 1 - jnp.tanh(x_jax)**2
         elif activation_function == 'swish':
-            sigmoid = 1.0 / (1.0 + np.exp(-x))
-            swish = x * sigmoid
-            result = swish + sigmoid * (1 - swish)
+            sigmoid = 1.0 / (1.0 + jnp.exp(-x_jax))
+            swish = x_jax * sigmoid
+            result_jax = swish + sigmoid * (1 - swish)
         elif activation_function == 'identity': 
-            result = np.ones_like(x)
+            result_jax = jnp.ones_like(x_jax)
         elif activation_function == 'relu': 
-            result = (x > 0).astype(float)
+            result_jax = (x_jax > 0).astype(float)
         elif activation_function == 'sigmoid':
-            sigmoid = 1 / (1 + np.exp(-x))
-            result = sigmoid * (1 - sigmoid)
+            sigmoid = 1 / (1 + jnp.exp(-x_jax))
+            result_jax = sigmoid * (1 - sigmoid)
         elif activation_function == 'leaky_relu': 
-            result = np.where(x > 0, 1, 0.01)
+            result_jax = jnp.where(x_jax > 0, 1, 0.01)
         else:
             raise ValueError(f"Unknown activation function: {activation_function}")
         
         # Create diagonal matrix and append zeros for bias - use minimal allocation
-        result_flat = result.flatten()
+        result_flat = result_jax.flatten()
         diag_size = len(result_flat)
         
-        # Create the result matrix with diagonal and zeros
-        final_result = np.zeros((diag_size + 1, diag_size))
-        np.fill_diagonal(final_result[:diag_size, :], result_flat)
+        # Create the result matrix with diagonal and zeros using JAX
+        final_result = jnp.zeros((diag_size + 1, diag_size))
+        final_result = final_result.at[:diag_size, :].set(jnp.diag(result_flat))
         
-        return final_result
+        return np.asarray(final_result)
