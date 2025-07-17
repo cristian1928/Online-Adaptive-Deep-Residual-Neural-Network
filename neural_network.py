@@ -117,37 +117,13 @@ class NeuralNetwork:
         return neural_network_output
 
     def set_weights(self, weights):
-        """
-        Set the neural network weights deterministically.
-        
-        Args:
-            weights (np.ndarray): Weight vector of shape (total_weights, 1)
-        """
         self.weights = weights.copy()
 
     def forward_raw(self, step):
-        """
-        Perform raw forward pass without learning rate updates.
-        
-        Args:
-            step (int): Time step
-            
-        Returns:
-            np.ndarray: Neural network output
-        """
         _, neural_network_output, _, _, _ = self._run_forward_pass(step)
         return neural_network_output
 
     def jacobian_raw(self, step):
-        """
-        Compute the Jacobian (gradient) of the neural network output with respect to weights.
-        
-        Args:
-            step (int): Time step
-            
-        Returns:
-            np.ndarray: Gradient matrix of shape (output_size, total_weights)
-        """
         _, neural_network_output, activated_layers_blocks, unactivated_layers_blocks, transposed_weights_blocks = self._run_forward_pass(step)
         total_gradient = self._run_backward_pass(activated_layers_blocks, unactivated_layers_blocks, transposed_weights_blocks)
         return total_gradient
