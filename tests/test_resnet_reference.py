@@ -4,10 +4,9 @@ from typing import Any, Dict
 
 import numpy as np
 
-# Add the src directory to Python path for testing
-sys.path.insert(0, os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "src"))
+sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from online_adaptive_resnet.core.neural_network import NeuralNetwork
+from neural_network import NeuralNetwork
 
 
 def test_resnet_reference_forward_and_gradient() -> None:
