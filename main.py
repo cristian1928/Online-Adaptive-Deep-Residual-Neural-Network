@@ -1,11 +1,35 @@
 import json
 from typing import Any, Dict, List
 
+import matplotlib
 import numpy as np
 
 import dynamics
-from data_manager import close_all_files, results, save_nn_to_csv, save_state_to_csv
+from data_manager import (
+    close_all_files,
+    compute_tracking_error,
+    results,
+    save_nn_to_csv,
+    save_state_to_csv,
+)
 from entity import Agent, Target
+
+
+def run_pipeline(config: Dict[str, Any], headless: bool = True) -> float:
+    """Run the complete simulation pipeline and return the tracking error norm.
+
+    Args:
+        config: Configuration dictionary with simulation parameters
+        headless: If True, use matplotlib 'Agg' backend for headless operation
+
+    Returns:
+        The computed tracking error norm
+    """
+    if headless:
+        matplotlib.use("Agg")
+
+    run_simulation(config)
+    return compute_tracking_error()
 
 
 def run_simulation(config: Dict[str, Any]) -> None:

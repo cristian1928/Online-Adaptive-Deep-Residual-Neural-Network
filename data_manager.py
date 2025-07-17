@@ -382,6 +382,24 @@ def animate() -> FuncAnimation:
     )
 
 
+def compute_tracking_error() -> float:
+    """Compute the RMS tracking error norm from the simulation data.
+
+    Returns:
+        The root mean square (RMS) tracking error norm.
+    """
+    agent_types, agents_state_data, target_state_data = get_simulation_data()
+
+    if not agents_state_data:
+        return 0.0
+
+    # Use the first agent's tracking error data
+    tracking_error_data = agents_state_data[0]["Tracking Error Norm"]
+    rms_error = float(np.sqrt(np.mean(tracking_error_data**2)))
+
+    return rms_error
+
+
 def results() -> None:
     close_all_files()
     plot_from_csv()
