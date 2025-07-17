@@ -1,40 +1,16 @@
-"""
-Regression test for ResNet forward pass and gradient computation.
-
-This test locks in the numerical behavior of the ResNet implementation
-by verifying that forward pass output and gradients match hand-computed
-reference values for a small, deterministic network configuration.
-
-Configuration:
-- Blocks: b = 2 (i ∈ {0, 1, 2})
-- Hidden layers per block: k₀ = k₁ = k₂ = 1
-- Neurons per hidden layer: 2
-- Input / Output widths: L_in = 3, L_out = 3
-- Activations: inner = swish, shortcut = tanh, outer = tanh
-- Input vector: κ₀ = [0.1, -0.5, 0.25]ᵀ
-- Final time-step used in test: step = 0
-
-Reference values are exact and validated by hand computation.
-Any deviation > 1e-6 should fail the test.
-"""
-
 import numpy as np
 import pytest
 from pathlib import Path
 import sys
 import os
+from typing import Callable, Dict, Any
 
-# Add the parent directory to the path so we can import from the main module
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from neural_network import NeuralNetwork
 
-
-def test_resnet_reference_forward_and_gradient():
-    """Test that ResNet forward pass and gradients match reference values for step 0."""
-    
-    # Reference configuration
-    config = {
+def test_resnet_reference_forward_and_gradient() -> None:
+    config: Dict[str, Any] = {
         'time_step_delta': 0.001,
         'final_time': 1.0,
         'num_blocks': 2,
@@ -50,45 +26,32 @@ def test_resnet_reference_forward_and_gradient():
         'weight_bounds': 4.0
     }
     
-    # Input function that returns the reference input vector
-    def input_func(step):
+    def input_func(step: int) -> np.ndarray:
         return np.array([0.1, -0.5, 0.25])
     
-    # Initialize neural network
-    nn = NeuralNetwork(input_func, config)
+    nn: NeuralNetwork = NeuralNetwork(input_func, config)
     
-    # Reference weight vector Θ (θ₀, θ₁, θ₂ each contain 17 scalars)
-    theta_0 = np.array([
+    theta_0: np.ndarray = np.array([
         -0.9, -0.8, -0.7, -0.6, -0.5, -0.4, -0.3, -0.2, -0.1,
          0.0,  0.1,  0.2,  0.3,  0.4,  0.5,  0.6,  0.7
     ], dtype=float)
 
-    theta_1 = np.array([
+    theta_1: np.ndarray = np.array([
          0.8,  0.9,  0.8,  0.7,  0.6,  0.5,  0.4,  0.3,  0.2,
          0.1,  0.0, -0.1, -0.2, -0.3, -0.4, -0.5, -0.6
     ], dtype=float)
 
-    theta_2 = np.array([
+    theta_2: np.ndarray = np.array([
          0.5,  0.4,  0.5,  0.6,  0.7,  0.8,  0.9,  0.8,  0.7,
          0.6,  0.5,  0.4, -0.7,  0.2,  0.1,  0.0, -0.1
     ], dtype=float)
 
-    # Concatenate -> shape (51, 1) to match self.weights
-    weights = np.hstack([theta_0, theta_1, theta_2]).reshape(-1, 1)
-    
-    # Inject reference weights into network
+    weights: np.ndarray = np.hstack([theta_0, theta_1, theta_2]).reshape(-1, 1)
     nn.set_weights(weights)
     
-    # Expected forward result  
-    # Note: The original issue specification had the second element as -0.712620, 
-    # but the current implementation produces -0.0712802368. Using the implementation 
-    # values as the regression test baseline.
-    expected_y = np.array([1.2625721047, -0.0712802368, -0.9033769290])
+    expected_y: np.ndarray = np.array([1.2625721047, -0.0712802368, -0.9033769290])
     
-    # Expected gradients - using values from current implementation
-    # Note: The original issue specification had different values, but using the current 
-    # implementation values as the regression test baseline.
-    dtheta_0 = np.array([
+    dtheta_0: np.ndarray = np.array([
         [ 0.01391869, -0.06959344,  0.03479672,  0.13918687,  0.04230649,
          -0.21153243,  0.10576621,  0.42306486, -0.67511316, -0.1933715 ,
           1.55502079, -0.26981733, -0.07728331,  0.62148329, -0.17602256,
@@ -103,7 +66,7 @@ def test_resnet_reference_forward_and_gradient():
          -0.10518591,  0.84586544]
     ])
 
-    dtheta_1 = np.array([
+    dtheta_1: np.ndarray = np.array([
         [ 2.69637215e-03,  5.09352193e-03,  7.32661544e-03,
           1.89299027e-02, -1.75682548e-02, -3.31869215e-02,
          -4.77366771e-02, -1.23338076e-01,  1.41548587e+00,
@@ -124,7 +87,7 @@ def test_resnet_reference_forward_and_gradient():
           6.02030085e-01,  1.02361885e+00]
     ])
 
-    dtheta_2 = np.array([
+    dtheta_2: np.ndarray = np.array([
         [ 0.22425388, -0.14022421, -0.42525419,  0.62159484,  0.20283896,
          -0.12683362, -0.38464492,  0.56223619,  0.33467503,  0.25087782,
           1.        ,  0.        ,  0.        ,  0.        ,  0.        ,
@@ -139,20 +102,15 @@ def test_resnet_reference_forward_and_gradient():
           0.25087782,  1.        ]
     ])
 
-    # Concatenate gradients -> shape (3, 51)
-    expected_dtheta = np.hstack([dtheta_0, dtheta_1, dtheta_2])
+    expected_dtheta: np.ndarray = np.hstack([dtheta_0, dtheta_1, dtheta_2])
     
-    # Test step 0
-    step = 0
+    step: int = 0
     
-    # Test forward pass
-    actual_y = nn.forward_raw(step)
-    actual_y_flat = actual_y.flatten()
+    actual_y: np.ndarray = nn.forward_raw(step)
+    actual_y_flat: np.ndarray = actual_y.flatten()
     
-    # Test gradient computation
-    actual_dtheta = nn.jacobian_raw(step)
+    actual_dtheta: np.ndarray = nn.jacobian_raw(step)
     
-    # Verify forward pass within tolerance
     np.testing.assert_allclose(
         actual_y_flat, 
         expected_y, 
@@ -161,7 +119,6 @@ def test_resnet_reference_forward_and_gradient():
         err_msg=f"Forward pass output mismatch.\nExpected: {expected_y}\nActual: {actual_y_flat}"
     )
     
-    # Verify gradient computation within tolerance
     np.testing.assert_allclose(
         actual_dtheta, 
         expected_dtheta, 
@@ -171,7 +128,6 @@ def test_resnet_reference_forward_and_gradient():
     )
     
     print("✓ ResNet reference test passed - forward pass and gradients match expected values")
-
 
 if __name__ == "__main__":
     test_resnet_reference_forward_and_gradient()
