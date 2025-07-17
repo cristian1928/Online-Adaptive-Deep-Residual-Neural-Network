@@ -2,7 +2,7 @@ from typing import Any, Callable, Dict, List, Optional, Tuple
 
 import numpy as np
 
-from ..utils.integrate import integrate_step
+from integrate import integrate_step
 
 
 class NeuralNetwork:
