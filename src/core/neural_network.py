@@ -1,4 +1,4 @@
-from integrate import integrate_step
+from ..simulation.integrate import integrate_step
 import numpy as np
 
 class NeuralNetwork:

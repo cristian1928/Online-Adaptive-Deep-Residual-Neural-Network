@@ -13,7 +13,7 @@ import pytest
 
 sys.path.insert(0, Path(__file__).resolve().parent.parent.as_posix())
 
-import data_manager
+from src.io import data_manager
 from main import run_simulation
 
 
@@ -53,7 +53,8 @@ def test_animation_functionality():
                 run_simulation(TEST_CONFIG)
 
             with patch("matplotlib.pyplot.show"):
-                animation = data_manager.animate()
+                from src.visualization.plotter import animate
+                animation = animate()
                 assert animation is not None, "animate() should return an animation object"
         finally:
             os.chdir(orig_cwd)

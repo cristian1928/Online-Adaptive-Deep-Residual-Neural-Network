@@ -27,26 +27,44 @@ This project combines online adaptive learning with deep residual network archit
 
 ## Architecture
 
-The project is organized into several key modules:
+The project is organized into a clean, purposeful directory structure:
 
-- **System Dynamics (`dynamics.py`):**  
-  Implements the equations governing the simulated system. This module updates the state of the system over time based on the current dynamics.
+```
+.
+├── main.py                    # Entry point - simulation runner and orchestration
+├── config.json               # Configuration file for simulation and network parameters
+├── requirements.txt           # Python package dependencies
+├── src/                       # Source code organized by purpose
+│   ├── core/                  # Core logic - neural networks and entities
+│   │   ├── neural_network.py  # Deep residual neural network implementation
+│   │   └── entity.py          # Agent and Target classes for simulation entities
+│   ├── simulation/            # Simulation logic - dynamics and integration
+│   │   ├── dynamics.py        # System dynamics equations (trophic, Chua, MRP)
+│   │   └── integrate.py       # Numerical integration utilities
+│   ├── io/                    # Input/output - data management
+│   │   └── data_manager.py    # CSV data writing, buffering, and file management
+│   └── visualization/         # Visualization - plotting and results
+│       └── plotter.py         # IEEE-standard plotting and animation functions
+├── tests/                     # Unit and integration tests
+└── simulation_data/           # Output directory for simulation results
+```
 
-- **Neural Network (`neural_network.py`):**  
-  Contains the implementation of the deep residual neural network. The network is designed to learn the mapping from inputs to outputs in an online adaptive manner, using specified activations.
+### Key Components
 
-- **Entity (`entity.py`):**  
-  Encapsulates an agent that interacts with the system dynamics. The entity uses the adaptive network to predict or control system behavior.
+- **Core Logic (`src/core/`):**  
+  Contains the neural network implementation and entity classes. The neural network uses deep residual architecture for online adaptive learning, while entities represent agents and targets in the simulation.
 
-- **Data Manager (`data_manager.py`):**  
-  Manages the collection, storage, and handling of simulation data. This module is responsible for ensuring that data is readily available for online learning and evaluation.
+- **Simulation (`src/simulation/`):**  
+  Implements the mathematical foundations - system dynamics equations and numerical integration methods for solving differential equations.
 
-- **Plotter (`plotter.py`):**  
-  Provides functionality to visualize simulation results and performance metrics, offering real-time feedback on the system’s performance and the network's learning progress.
+- **Data I/O (`src/io/`):**  
+  Manages efficient data storage with buffered CSV writing for simulation state and neural network parameters.
+
+- **Visualization (`src/visualization/`):**  
+  Provides IEEE-standard plotting capabilities for tracking error analysis, trajectory visualization, and neural network performance monitoring.
 
 - **Main Application (`main.py`):**  
-  Serves as the entry point of the program. It integrates all modules, sets up the simulation according to the configuration, and initiates the online adaptive learning process.
-
+  Serves as the entry point, integrating all modules and orchestrating the simulation workflow according to the configuration.
 ### Prerequisites
 
 - Python 3.7 or higher

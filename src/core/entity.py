@@ -1,7 +1,7 @@
 import numpy as np
-import dynamics
-from integrate import integrate_step
-from neural_network import NeuralNetwork
+from ..simulation import dynamics
+from ..simulation.integrate import integrate_step
+from .neural_network import NeuralNetwork
 
 class Entity:
     def __init__(self, initial_position, time_steps, config):
