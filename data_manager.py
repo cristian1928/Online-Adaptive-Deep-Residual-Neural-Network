@@ -239,6 +239,7 @@ def animate() -> FuncAnimation:
     fig = plt.figure()
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
     ax = fig.add_subplot(111, projection="3d")
     ax.set_xlabel("X Position (m)")
     ax.set_ylabel("Y Position (m)")
@@ -246,11 +247,16 @@ def animate() -> FuncAnimation:
 =======
 =======
 >>>>>>> parent of ed2ed2d (Merge pull request #14 from cristian1928/copilot/fix-12)
+=======
+>>>>>>> parent of ed2ed2d (Merge pull request #14 from cristian1928/copilot/fix-12)
     ax = fig.add_subplot(111, projection='3d')  # type: ignore
     ax.set_xlabel('X Position (m)')
     ax.set_ylabel('Y Position (m)')
     ax.set_zlabel('Z Position (m)')  # type: ignore
 <<<<<<< HEAD
+<<<<<<< HEAD
+>>>>>>> parent of ed2ed2d (Merge pull request #14 from cristian1928/copilot/fix-12)
+=======
 >>>>>>> parent of ed2ed2d (Merge pull request #14 from cristian1928/copilot/fix-12)
 =======
 >>>>>>> parent of ed2ed2d (Merge pull request #14 from cristian1928/copilot/fix-12)
@@ -281,7 +287,11 @@ def animate() -> FuncAnimation:
     legend.get_frame().set_linewidth(0.5)
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
     time_text = ax.text2D(0.02, 0.95, "", transform=ax.transAxes)  # 3D axes have text2D
+=======
+    time_text = ax.text2D(0.02, 0.95, '', transform=ax.transAxes)  # type: ignore
+>>>>>>> parent of ed2ed2d (Merge pull request #14 from cristian1928/copilot/fix-12)
 =======
     time_text = ax.text2D(0.02, 0.95, '', transform=ax.transAxes)  # type: ignore
 >>>>>>> parent of ed2ed2d (Merge pull request #14 from cristian1928/copilot/fix-12)
@@ -305,6 +315,7 @@ def animate() -> FuncAnimation:
 
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
         target_line.set_data(
             target_state_data["Position X"][start_idx : frame + 1],
             target_state_data["Position Y"][start_idx : frame + 1],
@@ -319,11 +330,16 @@ def animate() -> FuncAnimation:
 =======
 =======
 >>>>>>> parent of ed2ed2d (Merge pull request #14 from cristian1928/copilot/fix-12)
+=======
+>>>>>>> parent of ed2ed2d (Merge pull request #14 from cristian1928/copilot/fix-12)
         target_line.set_data(target_state_data['Position X'][start_idx:frame+1], target_state_data['Position Y'][start_idx:frame+1])
         target_line.set_3d_properties(target_state_data['Position Z'][start_idx:frame+1])  # type: ignore
         target_point.set_data([target_state_data['Position X'][frame]], [target_state_data['Position Y'][frame]])
         target_point.set_3d_properties([target_state_data['Position Z'][frame]])  # type: ignore
 <<<<<<< HEAD
+<<<<<<< HEAD
+>>>>>>> parent of ed2ed2d (Merge pull request #14 from cristian1928/copilot/fix-12)
+=======
 >>>>>>> parent of ed2ed2d (Merge pull request #14 from cristian1928/copilot/fix-12)
 =======
 >>>>>>> parent of ed2ed2d (Merge pull request #14 from cristian1928/copilot/fix-12)
@@ -335,6 +351,7 @@ def animate() -> FuncAnimation:
     plt.tight_layout()
     plt.show()
     return FuncAnimation(fig, update, frames=range(0, num_frames, max(1, num_frames//200)), blit=False, interval=75)
+<<<<<<< HEAD
 <<<<<<< HEAD
 
 def compute_tracking_error() -> float:
@@ -354,6 +371,8 @@ def compute_tracking_error() -> float:
 
     return rms_error
 
+=======
+>>>>>>> parent of ed2ed2d (Merge pull request #14 from cristian1928/copilot/fix-12)
 =======
 >>>>>>> parent of ed2ed2d (Merge pull request #14 from cristian1928/copilot/fix-12)
 
