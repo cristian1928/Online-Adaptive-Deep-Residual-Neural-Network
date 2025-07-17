@@ -1,3 +1,27 @@
+Metadata-Version: 2.4
+Name: online-adaptive-resnet
+Version: 1.0.0
+Summary: Online Adaptive Deep Residual Neural Network for Dynamical Systems
+Author-email: "Cristian F. Nino" <cristian1928@ufl.edu>
+License: AGPL-3.0
+Project-URL: Homepage, https://github.com/cristian1928/Online-Adaptive-Deep-Residual-Neural-Network
+Project-URL: Repository, https://github.com/cristian1928/Online-Adaptive-Deep-Residual-Neural-Network
+Classifier: Development Status :: 4 - Beta
+Classifier: Intended Audience :: Science/Research
+Classifier: License :: OSI Approved :: GNU Affero General Public License v3
+Classifier: Programming Language :: Python :: 3
+Classifier: Programming Language :: Python :: 3.12
+Classifier: Topic :: Scientific/Engineering :: Artificial Intelligence
+Requires-Python: >=3.12
+Description-Content-Type: text/markdown
+License-File: LICENSE
+Requires-Dist: numpy
+Requires-Dist: scipy
+Requires-Dist: matplotlib
+Requires-Dist: pandas
+Requires-Dist: scienceplots
+Dynamic: license-file
+
 # Online Adaptive Deep Residual Neural Network
 
 An implementation of an online adaptive deep neural network with residual connections designed for modeling and controlling dynamical systems. This repository provides a simulation framework where a deep neural network continuously learns and adapts its weights in real time.
@@ -88,47 +112,16 @@ You can modify these parameters to experiment with different simulation settings
 
 ## Usage
 
-The project can be run in multiple ways:
-
-### Using the installed package (recommended)
+To run the simulation and begin online adaptive learning, execute the main script:
 
 ```bash
-# Run simulation with default configuration
-online-adaptive-resnet
-
-# Run with custom configuration
-online-adaptive-resnet --config my_config.json
-
-# Generate plots from existing data only
-online-adaptive-resnet --plot-only
+python3 main.py
 ```
-
-### Using Python module syntax
-
-```bash
-# Run simulation with default configuration
-python -m online_adaptive_resnet
-
-# Run with custom configuration
-python -m online_adaptive_resnet --config my_config.json
-
-# Generate plots from existing data only
-python -m online_adaptive_resnet --plot-only
-```
-
-### Installation
-
-For development, install the package in editable mode:
-
-```bash
-pip install -e .
-```
-
 This will:
-- Initialize the system dynamics and network with the parameters specified in config.json
-- Start the simulation loop where the system state is updated at each time step
-- Adapt the neural network weights in an online manner
-- Log data via the data manager and update visualizations in real time using the plotter
+- Initialize the system dynamics and network with the parameters specified in config.json.
+- Start the simulation loop where the system state is updated at each time step.
+- Adapt the neural network weights in an online manner.
+- Log data via the data manager and update visualizations in real time using the plotter.
 
 ## Development Workflow
 
