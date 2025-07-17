@@ -186,40 +186,32 @@ class NeuralNetwork:
         return result_activated, result_unactivated
 
     def perform_backward_propagation(self, activated_layers: list[NDArray[np.float64]], unactivated_layers: list[NDArray[np.float64]], transposed_weight_matrices: list[NDArray[np.float64]], outer_product: NDArray[np.float64] | None = None) -> tuple[NDArray[np.float64], NDArray[np.float64]]:
-        gradient: NDArray[np.float64] | None = None
-        product: NDArray[np.float64] | None = None
-        
-        for layer_index in range(self.num_layers, -1, -1):
-            transposed_output = activated_layers[layer_index].T
+            gradient: NDArray[np.float64] | None = None
+            product: NDArray[np.float64] | None = None
             
-            if layer_index == self.num_layers:
-                # Compute kronecker product: kron(eye(num_outputs), transposed_output)
-                # Result shape: (num_outputs * transposed_output.shape[0], num_outputs * transposed_output.shape[1])
-                current_gradient = np.kron(self._temp_kron_eye_outputs, transposed_output)
+            for layer_index in range(self.num_layers, -1, -1): 
+                transposed_output = activated_layers[layer_index].T
                 
-                if outer_product is not None: 
-                    gradient = outer_product @ current_gradient
-                else: 
-                    gradient = current_gradient
-                
-                product = transposed_weight_matrices[layer_index] @ self.apply_activation_function_derivative_and_bias(unactivated_layers[layer_index - 1], self.outer_layer_activation_function)
-            else:
-                # Compute kronecker product: kron(eye(num_neurons), transposed_output)
-                kron_product = np.kron(self._temp_kron_eye_neurons, transposed_output)
-                
-                if outer_product is None: 
-                    layer_gradient = product @ kron_product if product is not None else np.zeros_like(kron_product)
-                else: 
-                    layer_gradient = outer_product @ product @ kron_product if product is not None else np.zeros_like(kron_product)
-                
-                gradient = np.hstack((layer_gradient, gradient)) if gradient is not None else layer_gradient
-                
-                if layer_index != 0 and product is not None: 
-                    product = product @ transposed_weight_matrices[layer_index] @ self.apply_activation_function_derivative_and_bias(unactivated_layers[layer_index - 1], self.inner_layer_activation_function)
-        
-        if gradient is None: gradient = np.zeros((1, 1))  # fallback case
-        if product is None: product = np.zeros((1, 1))  # fallback case
-        return gradient, product
+                if layer_index == self.num_layers:
+                    current_gradient = np.asarray(np.kron(self._temp_kron_eye_outputs, transposed_output),dtype=np.float64)
+                    
+                    if outer_product is not None: gradient = outer_product @ current_gradient
+                    else: gradient = current_gradient
+                    product = transposed_weight_matrices[layer_index] @ self.apply_activation_function_derivative_and_bias(unactivated_layers[layer_index - 1], self.outer_layer_activation_function)
+                else:
+                    kron_product = np.asarray(np.kron(self._temp_kron_eye_neurons, transposed_output), dtype=np.float64)
+                    
+                    if outer_product is None: layer_gradient = product @ kron_product if product is not None else np.zeros_like(kron_product)
+                    else: layer_gradient = outer_product @ product @ kron_product if product is not None else np.zeros_like(kron_product)
+                    
+                    gradient = np.hstack((layer_gradient, gradient)) if gradient is not None else layer_gradient
+                    
+                    if layer_index != 0 and product is not None: 
+                        product = product @ transposed_weight_matrices[layer_index] @ self.apply_activation_function_derivative_and_bias(unactivated_layers[layer_index - 1], self.inner_layer_activation_function)
+            
+            if gradient is None: gradient = np.zeros((1, 1))  # fallback case
+            if product is None: product = np.zeros((1, 1))  # fallback case
+            return gradient, product
 
     def _run_forward_pass(self, step: int) -> tuple[int, NDArray[np.float64], list[list[NDArray[np.float64]]], list[list[NDArray[np.float64]]], list[list[NDArray[np.float64]]]]:
         weight_index = 0
