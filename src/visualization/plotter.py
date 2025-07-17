@@ -2,10 +2,11 @@ import os
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
-from mpl_toolkits.mplot3d import Axes3D
+from mpl_toolkits.mplot3d import Axes3D  # type: ignore[import-untyped]
 import matplotlib as mpl
 from matplotlib.animation import FuncAnimation
-import scienceplots
+import scienceplots  # type: ignore[import-untyped]
+from typing import Tuple, Any, Dict, List
 
 # Constants for data access
 DATA_DIR = 'simulation_data'
@@ -13,7 +14,7 @@ STATE_DATA_SUFFIX = '_state_data.csv'
 NN_DATA_SUFFIX = '_nn_data.csv'
 TARGET_FILE = f'{DATA_DIR}/target_state_data.csv'
 
-def configure_plot():
+def configure_plot() -> None:
     """Configure matplotlib for IEEE standard plotting."""
     plt.style.use(['science', 'ieee'])
     plt.rcParams['figure.dpi'] = 100
@@ -29,7 +30,7 @@ def configure_plot():
         'legend.edgecolor': 'black',
     })
 
-def get_simulation_data():
+def get_simulation_data() -> Tuple[List[str], List[pd.DataFrame], pd.DataFrame]:
     """Load simulation state data from CSV files."""
     csv_state_files = [f for f in os.listdir(DATA_DIR) if f.endswith(STATE_DATA_SUFFIX) and not f.startswith('target')]
     csv_state_files.sort()
@@ -38,7 +39,7 @@ def get_simulation_data():
     target_state_data = pd.read_csv(TARGET_FILE)
     return agent_types, agents_state_data, target_state_data
 
-def get_nn_data():
+def get_nn_data() -> Tuple[List[str], List[pd.DataFrame]]:
     """Load neural network data from CSV files."""
     csv_nn_files = [f for f in os.listdir(DATA_DIR) if f.endswith(NN_DATA_SUFFIX)]
     csv_nn_files.sort()
@@ -46,7 +47,7 @@ def get_nn_data():
     agents_nn_data = [pd.read_csv(os.path.join(DATA_DIR, f)) for f in csv_nn_files]
     return agent_types, agents_nn_data
 
-def plot_from_csv():
+def plot_from_csv() -> None:
     """Generate all plots from CSV simulation data."""
     configure_plot()
     agent_types, agents_state_data, target_state_data = get_simulation_data()
@@ -123,7 +124,7 @@ def plot_from_csv():
 
     plt.show() 
 
-def animate():
+def animate() -> None:
     """Create animated visualization of simulation trajectories."""
     plt.style.use('default')
     agent_types, agents_state_data, target_state_data = get_simulation_data()
@@ -163,7 +164,7 @@ def animate():
 
     trail_length = 3500
 
-    def update(frame):
+    def update(frame: int) -> Any:
         current_time = target_state_data['Time'][frame]
         time_text.set_text(f'Time: {current_time:.2f} s')
     
@@ -180,7 +181,7 @@ def animate():
         target_point.set_data([target_state_data['Position X'][frame]], [target_state_data['Position Y'][frame]])
         target_point.set_3d_properties([target_state_data['Position Z'][frame]])
 
-        return agent_lines + agent_points + [target_line, target_point, time_text]
+        return update agent_lines + agent_points + [target_line, target_point, time_text]
 
     num_frames = len(target_state_data)
 
@@ -188,7 +189,7 @@ def animate():
     plt.show()
     return FuncAnimation(fig, update, frames=range(0, num_frames, max(1, num_frames//200)), blit=False, interval=75)
 
-def results():
+def results() -> None:
     """Generate all results plots and visualizations."""
     plot_from_csv()
     #animate()
