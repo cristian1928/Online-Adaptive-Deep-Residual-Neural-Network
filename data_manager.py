@@ -1,13 +1,17 @@
 import csv
 import os
 from collections import defaultdict
-from typing import Any, Dict, List, Optional, TextIO, Tuple
+from typing import TYPE_CHECKING, Any, Dict, List, Optional, TextIO, Tuple
+
+if TYPE_CHECKING:
+    from matplotlib.axes import Axes
+    from matplotlib.figure import Figure
 
 import matplotlib.pyplot as plt
 import numpy as np
-import pandas as pd  # type: ignore
+import pandas as pd
 from matplotlib.animation import FuncAnimation
-from mpl_toolkits.mplot3d import Axes3D  # type: ignore
+from mpl_toolkits.mplot3d import Axes3D
 
 from entity import Agent, Target
 
@@ -17,7 +21,7 @@ NN_DATA_SUFFIX: str = "_nn_data.csv"
 TARGET_FILE: str = f"{DATA_DIR}/target_state_data.csv"
 
 _file_handles: Dict[str, TextIO] = {}
-_csv_writers: Dict[str, csv.DictWriter] = {}
+_csv_writers: Dict[str, csv.DictWriter[str]] = {}
 _data_buffers: Dict[str, List[Dict[str, Any]]] = defaultdict(list)
 _buffer_size: int = 100
 
@@ -26,7 +30,7 @@ def ensure_directory_exists(directory: str) -> None:
     os.makedirs(directory, exist_ok=True)
 
 
-def _get_csv_writer(file_path: str, headers: List[str], step: int) -> csv.DictWriter:
+def _get_csv_writer(file_path: str, headers: List[str], step: int) -> csv.DictWriter[str]:
     if file_path not in _file_handles:
         if step == 1 and os.path.exists(file_path):
             os.remove(file_path)
@@ -38,7 +42,7 @@ def _get_csv_writer(file_path: str, headers: List[str], step: int) -> csv.DictWr
 
 def _flush_buffer(file_path: str) -> None:
     if file_path in _data_buffers and _data_buffers[file_path]:
-        writer: csv.DictWriter = _csv_writers[file_path]
+        writer: csv.DictWriter[str] = _csv_writers[file_path]
         writer.writerows(_data_buffers[file_path])
         _file_handles[file_path].flush()
         _data_buffers[file_path].clear()
@@ -182,19 +186,19 @@ def get_nn_data() -> Tuple[List[str], List[pd.DataFrame]]:
     return agent_types, agents_nn_data
 
 
-def create_plot_with_config(figsize: Tuple[int, int] = (8, 6)) -> Tuple[plt.Figure, plt.Axes]:
+def create_plot_with_config(figsize: Tuple[int, int] = (8, 6)) -> Tuple["Figure", "Axes"]:
     fig, ax = plt.subplots(figsize=figsize)
     return fig, ax
 
 
-def create_3d_plot_with_config(figsize: Tuple[int, int] = (8, 6)) -> Tuple[plt.Figure, Axes3D]:
+def create_3d_plot_with_config(figsize: Tuple[int, int] = (8, 6)) -> Tuple["Figure", Axes3D]:
     fig = plt.figure(figsize=figsize)
     ax = fig.add_subplot(111, projection="3d")
     return fig, ax
 
 
 def plot_time_series(
-    ax: plt.Axes,
+    ax: "Axes",
     time_data: pd.Series,
     data: pd.Series,
     xlabel: str,
@@ -253,7 +257,7 @@ def plot_from_csv() -> None:
     ax.set_ylabel("Y Position (m)")
     ax.set_zlabel("Z Position (m)")
     ax.legend(loc="best", fontsize=12, frameon=True, edgecolor="black")
-    ax.set_box_aspect((1, 1, 1))  # type: ignore
+    ax.set_box_aspect((1, 1, 1))
     plt.tight_layout()
 
     for _i, nn in enumerate(agents_nn_data):
@@ -304,10 +308,10 @@ def animate() -> FuncAnimation:
     agent_types, agents_state_data, target_state_data = get_simulation_data()
 
     fig = plt.figure()
-    ax = fig.add_subplot(111, projection="3d")  # type: ignore
+    ax = fig.add_subplot(111, projection="3d")
     ax.set_xlabel("X Position (m)")
     ax.set_ylabel("Y Position (m)")
-    ax.set_zlabel("Z Position (m)")  # type: ignore
+    ax.set_zlabel("Z Position (m)")  # type: ignore[attr-defined]
 
     position_data: List[pd.DataFrame] = agents_state_data + [target_state_data]
     x_min, x_max = min(data["Position X"].min() for data in position_data), max(
@@ -353,9 +357,9 @@ def animate() -> FuncAnimation:
             agent_lines[i].set_data(
                 data["Position X"][start_idx : frame + 1], data["Position Y"][start_idx : frame + 1]
             )
-            agent_lines[i].set_3d_properties(data["Position Z"][start_idx : frame + 1])  # type: ignore
+            agent_lines[i].set_3d_properties(data["Position Z"][start_idx : frame + 1])
             agent_points[i].set_data([data["Position X"][frame]], [data["Position Y"][frame]])
-            agent_points[i].set_3d_properties([data["Position Z"][frame]])  # type: ignore
+            agent_points[i].set_3d_properties([data["Position Z"][frame]])
 
         target_line.set_data(
             target_state_data["Position X"][start_idx : frame + 1],

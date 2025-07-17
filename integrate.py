@@ -1,7 +1,7 @@
 from typing import Callable, Union
 
 import numpy as np
-from scipy.integrate import solve_ivp  # type: ignore
+from scipy.integrate import solve_ivp
 
 
 def integrate_step(
@@ -19,4 +19,4 @@ def integrate_step(
         return np.asarray(dy_dt).ravel()
 
     sol = solve_ivp(wrapped_derivative, [step, step + time_step_delta], y0)
-    return sol.y[:, -1].reshape(orig_shape)
+    return sol.y[:, -1].reshape(orig_shape)  # type: ignore[no-any-return]

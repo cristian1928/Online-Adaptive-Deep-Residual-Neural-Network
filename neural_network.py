@@ -170,9 +170,9 @@ class NeuralNetwork:
     ]:
         weight_index: int = 0
         neural_network_output: np.ndarray = np.zeros(self.num_outputs).reshape(-1, 1)
-        activated_layers_blocks: List[List[np.ndarray]] = [None] * (self.num_blocks + 1)
-        unactivated_layers_blocks: List[List[np.ndarray]] = [None] * (self.num_blocks + 1)
-        transposed_weights_blocks: List[List[np.ndarray]] = [None] * (self.num_blocks + 1)
+        activated_layers_blocks: List[List[np.ndarray]] = [[] for _ in range(self.num_blocks + 1)]
+        unactivated_layers_blocks: List[List[np.ndarray]] = [[] for _ in range(self.num_blocks + 1)]
+        transposed_weights_blocks: List[List[np.ndarray]] = [[] for _ in range(self.num_blocks + 1)]
 
         for block_index in range(self.num_blocks + 1):
             weight_index, transposed_weights_blocks[block_index] = (
@@ -224,7 +224,7 @@ class NeuralNetwork:
                 total_gradient = np.hstack((block_gradient, total_gradient))
 
             if block_index > 0:
-                block_output: np.ndarray = sum(
+                block_output: np.ndarray = sum(  # type: ignore[assignment]
                     unactivated_layers_blocks[i][-1] for i in range(block_index)
                 )
                 preactivation_derivative: np.ndarray = (
@@ -303,7 +303,7 @@ class NeuralNetwork:
                 )
             )
             mat: np.ndarray = normalized_neural_network_gradient_wrt_weights @ gamma
-            return (
+            return (  # type: ignore[no-any-return]
                 -mat.T @ mat
                 + (self.beta_1 * np.eye(gamma.shape[0]))
                 + (self.beta_2 * gamma)
@@ -311,7 +311,7 @@ class NeuralNetwork:
             )
 
         self.learning_rate[step] = integrate_step(
-            self.learning_rate[step - 1], step, self.time_step_delta, learning_rate_deriv
+            self.learning_rate[step - 1], step, self.time_step_delta, learning_rate_deriv  # type: ignore[arg-type]
         )
 
     def update_neural_network_weights(self, step: int, loss: np.ndarray) -> None:
@@ -326,7 +326,7 @@ class NeuralNetwork:
             )
             return projected_weights
 
-        self.weights = integrate_step(self.weights, step, self.time_step_delta, weights_deriv)
+        self.weights = integrate_step(self.weights, step, self.time_step_delta, weights_deriv)  # type: ignore[assignment,arg-type]
 
     def proj(self, theta: np.ndarray, theta_hat: np.ndarray, theta_bar: float) -> np.ndarray:
         max_term: float = max(0.0, np.dot(theta_hat.T, theta_hat) - theta_bar**2)

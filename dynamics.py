@@ -17,7 +17,7 @@ def attitude_mrp(state: np.ndarray) -> np.ndarray:
     omega = np.linalg.inv(J) @ tau_b
 
     r_dot = 0.5 * B @ omega
-    return r_dot
+    return r_dot  # type: ignore[no-any-return]
 
 
 def chua(state: np.ndarray) -> np.ndarray:

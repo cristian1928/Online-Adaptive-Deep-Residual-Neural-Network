@@ -72,6 +72,6 @@ class Target(Entity):
             self.positions[:, step - 1],
             step,
             self.time_step_delta,
-            lambda t, pos: self.dynamics_function(pos),
+            lambda t, pos: self.dynamics_function(pos),  # type: ignore[arg-type]
         )
         self.positions[:, step] = result
