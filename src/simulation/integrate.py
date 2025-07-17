@@ -1,12 +1,10 @@
 from scipy.integrate import solve_ivp
 import numpy as np
 
-def integrate_step(initial_state, step, time_step_delta, derivative_func):
-    orig_shape = np.shape(initial_state)
-    y0 = np.asarray(initial_state).ravel()
-    def wrapped_derivative(t, y):
-        y_reshaped = y.reshape(orig_shape)
-        dy_dt = derivative_func(t, y_reshaped)
-        return np.asarray(dy_dt).ravel()
-    sol = solve_ivp(wrapped_derivative, [step, step + time_step_delta], y0)
+def integrate_step(state, step, dt, derivative):
+    orig_shape = np.shape(state)
+    y0 = np.asarray(state).ravel()
+    def wrapped(t, y): return np.asarray(derivative(t, y.reshape(orig_shape))).ravel()
+    t0 = step * dt
+    sol = solve_ivp(wrapped, [t0, t0 + dt], y0, rtol=1e-9, atol=1e-12)
     return sol.y[:, -1].reshape(orig_shape)
