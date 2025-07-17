@@ -3,10 +3,9 @@
 import csv
 import os
 from collections import defaultdict
-from typing import Any, Dict, List, TextIO, Tuple
+from typing import Any, Dict, List, TextIO
 
 import numpy as np
-import pandas as pd
 
 from ..viz.plotter import get_simulation_data
 

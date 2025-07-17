@@ -1,9 +1,10 @@
 """Main entry point for the RNN simulation package."""
 
-from .apps.main import run_simulation
 import json
 import sys
 from typing import Any, Dict
+
+from .apps.main import run_simulation
 
 
 def main() -> None:

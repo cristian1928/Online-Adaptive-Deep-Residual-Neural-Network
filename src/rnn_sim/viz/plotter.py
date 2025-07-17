@@ -13,7 +13,6 @@ import pandas as pd
 from matplotlib.animation import FuncAnimation
 from mpl_toolkits.mplot3d import Axes3D
 
-
 DATA_DIR: str = "simulation_data"
 STATE_DATA_SUFFIX: str = "_state_data.csv"
 NN_DATA_SUFFIX: str = "_nn_data.csv"
