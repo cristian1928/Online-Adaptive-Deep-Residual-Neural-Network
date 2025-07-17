@@ -99,6 +99,69 @@ This will:
 - Adapt the neural network weights in an online manner.
 - Log data via the data manager and update visualizations in real time using the plotter.
 
+## Development Workflow
+
+This project follows professional Python development practices with automated code formatting, linting, and type checking.
+
+### Setting up the Development Environment
+
+1. Install Python 3.12 or higher
+2. Install the required dependencies:
+   ```bash
+   pip install numpy scipy matplotlib pandas
+   ```
+3. Install development dependencies:
+   ```bash
+   pip install -r requirements-dev.txt
+   ```
+4. (Optional) Install pre-commit hooks:
+   ```bash
+   pre-commit install
+   ```
+
+### Code Quality Tools
+
+The project uses the following tools to maintain code quality:
+
+- **[Black](https://black.readthedocs.io/)** - Automatic code formatting (PEP 8 compliant)
+- **[Ruff](https://docs.astral.sh/ruff/)** - Fast Python linter covering multiple tools (Flake8, isort, etc.)
+- **[Mypy](https://mypy-lang.org/)** - Static type checking
+
+### Running Quality Checks
+
+Before committing code, run all quality checks:
+
+```bash
+# Format code with Black
+black .
+
+# Run Ruff linter
+ruff check .
+
+# Run Mypy type checker
+mypy . --ignore-missing-imports
+
+# Run tests
+python -m pytest tests/ -v
+```
+
+### Pre-commit Hooks
+
+Pre-commit hooks automatically run Black, Ruff, and Mypy on staged files before each commit. Install them with:
+
+```bash
+pre-commit install
+```
+
+### Continuous Integration
+
+GitHub Actions automatically runs all quality checks on every push and pull request. The CI pipeline will:
+- Format check with Black (`black --check .`)
+- Lint with Ruff (`ruff check .`)
+- Type check with Mypy (`mypy . --ignore-missing-imports`)
+
+All checks must pass before code can be merged.
+
 ## License
 
 This project is licensed under the GNU Affero General Public License v3.0. See the [LICENSE](LICENSE) file for details.
