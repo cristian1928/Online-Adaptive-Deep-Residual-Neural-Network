@@ -153,7 +153,6 @@ def plot_from_csv():
     for i, ad in enumerate(agents_state_data):
         te = ad['Tracking Error Norm']
         rms = np.sqrt(np.mean(te**2))
-        print(rms)
         plot_data.append((i, agent_types[i], te, rms))
     plot_data.sort(key=lambda x: x[3], reverse=True)
     for i, agent_type, te, rms in plot_data:
