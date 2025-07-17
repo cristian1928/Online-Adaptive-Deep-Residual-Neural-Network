@@ -41,7 +41,7 @@ TEST_CONFIG = {
 }
 
 
-def test_plotting_functionality():
+def test_plotting_functionality() -> None:
     with tempfile.TemporaryDirectory() as tmp:
         orig_cwd = Path.cwd()
         orig_data_dir = data_manager.DATA_DIR

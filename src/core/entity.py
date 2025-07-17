@@ -1,32 +1,34 @@
 import numpy as np
+from typing import Dict, Any, Callable, Union, cast
 from ..simulation import dynamics
 from ..simulation.integrate import integrate_step
 from .neural_network import NeuralNetwork
 
 class Entity:
-    def __init__(self, initial_position, time_steps, config):
-        self.num_states = config['num_states']
-        self.time_step_delta = config['time_step_delta']
-        self.positions = np.zeros((self.num_states, time_steps))
-        self.velocities = np.zeros((self.num_states, time_steps))
+    def __init__(self, initial_position: np.ndarray, time_steps: int, config: Dict[str, Any]) -> None:
+        self.num_states: int = config['num_states']
+        self.time_step_delta: float = config['time_step_delta']
+        self.positions: np.ndarray = np.zeros((self.num_states, time_steps))
+        self.velocities: np.ndarray = np.zeros((self.num_states, time_steps))
         self.positions[:, 0] = initial_position
 
 class Agent(Entity):
-    def __init__(self, initial_position, time_steps, config, target, agent_type):
+    def __init__(self, initial_position: np.ndarray, time_steps: int, config: Dict[str, Any], target: "Target", agent_type: str) -> None:
         super().__init__(initial_position, time_steps, config)
-        self.target = target
-        self.agent_type = agent_type
-        self.k1 = config['k1']
-        self.control_output = np.zeros(self.num_states)
+        self.target: "Target" = target
+        self.agent_type: str = agent_type
+        self.k1: float = config['k1']
+        self.control_output: np.ndarray = np.zeros(self.num_states)
 
-        self.tracking_error = np.zeros(self.num_states)
+        self.tracking_error: np.ndarray = np.zeros(self.num_states)
 
-        self.neural_network = NeuralNetwork(self._input_func, config)
-        self.neural_network_output = np.zeros(self.num_states)
+        self.neural_network: NeuralNetwork = NeuralNetwork(self._input_func, config)
+        self.neural_network_output: np.ndarray = np.zeros(self.num_states)
 
-    def _input_func(self, step): return self.target.positions[:, step - 1]
+    def _input_func(self, step: int) -> np.ndarray: 
+        return self.target.positions[:, step - 1]
 
-    def compute_control_output(self, step):
+    def compute_control_output(self, step: int) -> None:
         # Compute tracking error
         self.tracking_error = self.target.positions[:, step - 1] - self.positions[:, step - 1]
 
@@ -37,13 +39,21 @@ class Agent(Entity):
         # Compute Controller
         self.control_output = self.k1*self.tracking_error + self.neural_network_output
 
-    def update_dynamics(self, step): self.positions[:, step] = integrate_step(self.positions[:, step - 1], step, self.time_step_delta, lambda t, y: self.control_output)
+    def update_dynamics(self, step: int) -> None: 
+        def control_wrapper(t: float, y: Union[np.ndarray, float]) -> Union[np.ndarray, float]:
+            return self.control_output
+        result = integrate_step(self.positions[:, step - 1], step, self.time_step_delta, control_wrapper)
+        self.positions[:, step] = cast(np.ndarray, result)
 
 class Target(Entity):
-    def __init__(self, initial_position, time_steps, config):
+    def __init__(self, initial_position: np.ndarray, time_steps: int, config: Dict[str, Any]) -> None:
         super().__init__(initial_position, time_steps, config)
         dynamics_type = config.get('dynamics_type', 'trophic_dynamics')
-        self.dynamics_function = dynamics.get_dynamics_function(dynamics_type)
+        self.dynamics_function: Callable[[np.ndarray], np.ndarray] = dynamics.get_dynamics_function(dynamics_type)
         
-    def update_dynamics(self, step): 
-        self.positions[:, step] = integrate_step(self.positions[:, step - 1], step, self.time_step_delta, lambda t, pos: self.dynamics_function(pos))
+    def update_dynamics(self, step: int) -> None: 
+        def dynamics_wrapper(t: float, pos: Union[np.ndarray, float]) -> Union[np.ndarray, float]:
+            pos_array = np.asarray(pos)
+            return self.dynamics_function(pos_array)
+        result = integrate_step(self.positions[:, step - 1], step, self.time_step_delta, dynamics_wrapper)
+        self.positions[:, step] = cast(np.ndarray, result)

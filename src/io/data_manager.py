@@ -2,6 +2,11 @@ import os
 import numpy as np
 import csv
 from collections import defaultdict
+from typing import Dict, List, Any, TextIO, Optional, TYPE_CHECKING
+from csv import DictWriter
+
+if TYPE_CHECKING:
+    from src.core.entity import Agent, Target
 
 # Constants for data management
 DATA_DIR = 'simulation_data'
@@ -10,16 +15,16 @@ NN_DATA_SUFFIX = '_nn_data.csv'
 TARGET_FILE = f'{DATA_DIR}/target_state_data.csv'
 
 # Global file handles and data buffers for efficient writing
-_file_handles = {}
-_csv_writers = {}
-_data_buffers = defaultdict(list)
-_buffer_size = 100
+_file_handles: Dict[str, TextIO] = {}
+_csv_writers: Dict[str, DictWriter[str]] = {}
+_data_buffers: Dict[str, List[Dict[str, Any]]] = defaultdict(list)
+_buffer_size: int = 100
 
-def ensure_directory_exists(directory):
+def ensure_directory_exists(directory: str) -> None:
     """Create directory if it doesn't exist."""
     os.makedirs(directory, exist_ok=True)
 
-def _get_csv_writer(file_path, headers, step):
+def _get_csv_writer(file_path: str, headers: List[str], step: int) -> DictWriter[str]:
     """Get or create a CSV writer for the given file path."""
     if file_path not in _file_handles:
         if step == 1 and os.path.exists(file_path): 
@@ -29,7 +34,7 @@ def _get_csv_writer(file_path, headers, step):
         _csv_writers[file_path].writeheader()
     return _csv_writers[file_path]
 
-def _flush_buffer(file_path):
+def _flush_buffer(file_path: str) -> None:
     """Flush buffered data to file."""
     if file_path in _data_buffers and _data_buffers[file_path]:
         writer = _csv_writers[file_path]
@@ -37,11 +42,11 @@ def _flush_buffer(file_path):
         _file_handles[file_path].flush()
         _data_buffers[file_path].clear()
 
-def save_state_to_csv(step, time, agents, target):
+def save_state_to_csv(step: int, time: float, agents: List["Agent"], target: "Target") -> None:
     """Save agent and target state data to CSV files."""
     ensure_directory_exists(DATA_DIR)
 
-    target_row = {
+    target_row: Dict[str, Any] = {
         'Time': time, 
         'Position X': target.positions[0, step - 1], 
         'Position Y': target.positions[1, step - 1], 
@@ -59,7 +64,7 @@ def save_state_to_csv(step, time, agents, target):
         _get_csv_writer(state_file_path, headers, step)
 
         # Buffer the data instead of writing immediately
-        row_data = {
+        row_data: Dict[str, Any] = {
             'Time': time,
             'Position X': agent.positions[0, step - 1],
             'Position Y': agent.positions[1, step - 1],
@@ -78,7 +83,7 @@ def save_state_to_csv(step, time, agents, target):
     if len(_data_buffers[TARGET_FILE]) >= _buffer_size:  
         _flush_buffer(TARGET_FILE)
 
-def save_nn_to_csv(step, time, agents):
+def save_nn_to_csv(step: int, time: float, agents: List["Agent"]) -> None:
     """Save neural network data to CSV files."""
     ensure_directory_exists(DATA_DIR)
 
@@ -103,7 +108,7 @@ def save_nn_to_csv(step, time, agents):
         
         _get_csv_writer(nn_file_path, headers, step)
 
-        row_data = {
+        row_data: Dict[str, Any] = {
             'Time': time,
             'Learning Rate Spectral Norm': np.max(eigvals),
             'Function Approximation Error Norm': np.linalg.norm(agent.neural_network_output - agent.target.velocities[0, step - 1]),
@@ -116,7 +121,7 @@ def save_nn_to_csv(step, time, agents):
         if len(_data_buffers[nn_file_path]) >= _buffer_size: 
             _flush_buffer(nn_file_path)
 
-def close_all_files():
+def close_all_files() -> None:
     """Close all open file handles and flush remaining data."""
     for file_path in list(_data_buffers.keys()): 
         _flush_buffer(file_path)

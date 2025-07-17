@@ -128,7 +128,7 @@ EXPECTED_DTHETA = np.hstack([DTHETA_0, DTHETA_1, DTHETA_2])
 # ---------------------------------------------------------------------------
 # The test
 # ---------------------------------------------------------------------------
-def test_resnet_reference_forward_and_gradient():
+def test_resnet_reference_forward_and_gradient() -> None:
     nn = NeuralNetwork(_input, CONFIG)
     nn.set_weights(REFERENCE_WEIGHTS)
 
