@@ -13,7 +13,7 @@ import pytest
 
 sys.path.insert(0, Path(__file__).resolve().parent.parent.as_posix())
 
-import data_manager
+from src.io import data_manager
 from main import run_simulation
 
 
@@ -60,7 +60,8 @@ def test_plotting_functionality():
                 run_simulation(TEST_CONFIG)
 
             with patch("matplotlib.pyplot.show"):
-                data_manager.plot_from_csv()  # expect no exception
+                from src.visualization.plotter import plot_from_csv
+                plot_from_csv()  # expect no exception
         finally:
             os.chdir(orig_cwd)
             data_manager.DATA_DIR = orig_data_dir

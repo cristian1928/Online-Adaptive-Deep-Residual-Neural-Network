@@ -16,7 +16,7 @@ import pytest
 # make the package root importable
 sys.path.insert(0, Path(__file__).resolve().parent.parent.as_posix())
 
-import data_manager
+from src.io import data_manager
 from main import run_simulation
 
 

@@ -1,8 +1,9 @@
 import numpy as np
 import json
-from entity import Agent, Target
-from data_manager import save_nn_to_csv, save_state_to_csv, results, close_all_files
-import dynamics
+from src.core.entity import Agent, Target
+from src.io.data_manager import save_nn_to_csv, save_state_to_csv, close_all_files
+from src.visualization.plotter import results
+from src.simulation import dynamics
 
 def run_simulation(config):
     # Setup simulation parameters

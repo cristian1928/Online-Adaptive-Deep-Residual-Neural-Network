@@ -13,7 +13,7 @@ import pytest
 # make the project root importable
 sys.path.insert(0, Path(__file__).resolve().parent.parent.as_posix())
 
-from neural_network import NeuralNetwork
+from src.core.neural_network import NeuralNetwork
 
 
 # ---------------------------------------------------------------------------
