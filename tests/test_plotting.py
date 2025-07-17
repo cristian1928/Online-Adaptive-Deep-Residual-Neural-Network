@@ -2,14 +2,15 @@
 Smoke test: generating static plots should complete without raising.
 """
 
-import os, sys, tempfile
+import os
+import sys
+import tempfile
 from pathlib import Path
 from unittest.mock import patch
 
 import matplotlib
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt
-import pytest
 
 sys.path.insert(0, Path(__file__).resolve().parent.parent.as_posix())
 

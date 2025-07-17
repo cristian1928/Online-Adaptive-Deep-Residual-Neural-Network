@@ -2,7 +2,9 @@
 Regression test: full simulation produces the expected RMS tracking‑error norm.
 """
 
-import os, sys, tempfile
+import os
+import sys
+import tempfile
 from pathlib import Path
 from unittest.mock import patch
 
@@ -11,7 +13,6 @@ import pandas as pd
 import matplotlib
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt
-import pytest
 
 # make the package root importable
 sys.path.insert(0, Path(__file__).resolve().parent.parent.as_posix())

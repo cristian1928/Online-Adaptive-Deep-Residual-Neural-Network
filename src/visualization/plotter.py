@@ -2,12 +2,8 @@ import os
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
-from mpl_toolkits.mplot3d import Axes3D  # type: ignore
-import matplotlib as mpl
 from matplotlib.animation import FuncAnimation
-from matplotlib.axes import Axes
 from matplotlib.lines import Line2D
-import scienceplots  # type: ignore
 from typing import Tuple, List, Any, cast
 
 # Constants for data access

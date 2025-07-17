@@ -2,7 +2,7 @@ import os
 import numpy as np
 import csv
 from collections import defaultdict
-from typing import List, Dict, Any, TextIO, Optional, TYPE_CHECKING
+from typing import List, Dict, Any, TextIO, TYPE_CHECKING
 from csv import DictWriter
 
 if TYPE_CHECKING:

@@ -7,9 +7,8 @@ Any element‑wise deviation > 1 e‑6 fails the test.
 
 from numpy.typing import NDArray
 from pathlib import Path
-import os, sys
+import sys
 import numpy as np
-import pytest
 
 # make the project root importable
 sys.path.insert(0, Path(__file__).resolve().parent.parent.as_posix())
