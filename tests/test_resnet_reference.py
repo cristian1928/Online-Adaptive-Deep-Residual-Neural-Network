@@ -5,6 +5,7 @@ reference values for step 0 of a tiny deterministic network.
 Any element‑wise deviation > 1 e‑6 fails the test.
 """
 
+from numpy.typing import NDArray
 from pathlib import Path
 import os, sys
 import numpy as np
@@ -36,7 +37,7 @@ CONFIG = {
 }
 
 
-def _input(step: int) -> np.ndarray:
+def _input(step: int) -> NDArray[np.float_]:
     """Fixed input vector κ₀ used in the derivation."""
     return np.array([0.1, -0.5, 0.25])
 

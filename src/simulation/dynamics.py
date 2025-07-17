@@ -1,11 +1,12 @@
 import numpy as np
+from numpy.typing import NDArray
 from typing import List, Dict, Callable
 
 # =================================================
 # Attitude kinematics in Modified Rodrigues Parameters
 # =================================================
-def attitude_mrp(state: np.ndarray) -> np.ndarray:
-    def _skew(v: np.ndarray) -> np.ndarray:
+def attitude_mrp(state: NDArray[np.float_]) -> NDArray[np.float_]:
+    def _skew(v: NDArray[np.float_]) -> NDArray[np.float_]:
         x, y, z = v
         return np.array([[ 0, -z,  y], [ z,  0, -x], [-y,  x,  0]])
 
@@ -25,7 +26,7 @@ def attitude_mrp(state: np.ndarray) -> np.ndarray:
 # ================================================
 # Chua double-scroll chaotic circuit (dimensionless)
 # ================================================
-def chua(state: np.ndarray) -> np.ndarray:
+def chua(state: NDArray[np.float_]) -> NDArray[np.float_]:
     # Initial conditions:  x = 0.2,  y = 0.0,  z = 0.0
     x, y, z = state
     α  = 15.6
@@ -44,7 +45,7 @@ def chua(state: np.ndarray) -> np.ndarray:
 # =======================================================
 # Three-tier ecological food-chain model
 # =======================================================
-def trophic_dynamics(state: np.ndarray) -> np.ndarray:
+def trophic_dynamics(state: NDArray[np.float_]) -> NDArray[np.float_]:
     # Initial conditions:  H=40, P=9, T=2   (population counts or biomass units)
     H, P, T = state
     # Parameters
@@ -60,15 +61,15 @@ def trophic_dynamics(state: np.ndarray) -> np.ndarray:
     T_dot = -d_T * T + a_PT * P * T
     return np.array([H_dot, P_dot, T_dot])
 
-def custom(state: np.ndarray) -> np.ndarray:
+def custom(state: NDArray[np.float_]) -> NDArray[np.float_]:
     return np.zeros_like(state)
 
 # =======================================================
 # Dynamics mapping and configuration system
 # =======================================================
 
-def get_dynamics_function(dynamics_type: str) -> Callable[[np.ndarray], np.ndarray]:
-    dynamics_map: Dict[str, Callable[[np.ndarray], np.ndarray]] = {
+def get_dynamics_function(dynamics_type: str) -> Callable[[NDArray[np.float_]], NDArray[np.float_]]:
+    dynamics_map: Dict[str, Callable[[NDArray[np.float_]], NDArray[np.float_]]] = {
         "attitude_mrp": attitude_mrp,
         "chua": chua,
         "trophic_dynamics": trophic_dynamics,

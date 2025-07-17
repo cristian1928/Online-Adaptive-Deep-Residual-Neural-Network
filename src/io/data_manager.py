@@ -2,11 +2,16 @@ import os
 import numpy as np
 import csv
 from collections import defaultdict
-from typing import List, Any, TextIO, Optional, TYPE_CHECKING
+from typing import List, Dict, Any, TextIO, Optional, TYPE_CHECKING
 from csv import DictWriter
 
 if TYPE_CHECKING:
     from src.core.entity import Agent, Target
+    # For mypy, use the modern, specific type hint
+    CSVDictWriter = DictWriter[Any]
+else:
+    # For older Python runtimes, use the non-subscriptable class
+    CSVDictWriter = DictWriter
 
 # Constants for data management
 DATA_DIR = 'simulation_data'
@@ -15,16 +20,16 @@ NN_DATA_SUFFIX = '_nn_data.csv'
 TARGET_FILE = f'{DATA_DIR}/target_state_data.csv'
 
 # Global file handles and data buffers for efficient writing
-_file_handles: dict[str, TextIO] = {}
-_csv_writers: dict[str, DictWriter] = {}
-_data_buffers: dict[str, List[dict[str, Any]]] = defaultdict(list)
+_file_handles: Dict[str, TextIO] = {}
+_csv_writers: Dict[str, CSVDictWriter] = {}
+_data_buffers: Dict[str, List[Dict[str, Any]]] = defaultdict(list)
 _buffer_size: int = 100
 
 def ensure_directory_exists(directory: str) -> None:
     """Create directory if it doesn't exist."""
     os.makedirs(directory, exist_ok=True)
 
-def _get_csv_writer(file_path: str, headers: List[str], step: int) -> DictWriter:
+def _get_csv_writer(file_path: str, headers: List[str], step: int) -> CSVDictWriter:
     """Get or create a CSV writer for the given file path."""
     if file_path not in _file_handles:
         if step == 1 and os.path.exists(file_path): 
@@ -46,7 +51,7 @@ def save_state_to_csv(step: int, time: float, agents: List["Agent"], target: "Ta
     """Save agent and target state data to CSV files."""
     ensure_directory_exists(DATA_DIR)
 
-    target_row: dict[str, Any] = {
+    target_row: Dict[str, Any] = {
         'Time': time, 
         'Position X': target.positions[0, step - 1], 
         'Position Y': target.positions[1, step - 1], 
@@ -64,7 +69,7 @@ def save_state_to_csv(step: int, time: float, agents: List["Agent"], target: "Ta
         _get_csv_writer(state_file_path, headers, step)
 
         # Buffer the data instead of writing immediately
-        row_data: dict[str, Any] = {
+        row_data: Dict[str, Any] = {
             'Time': time,
             'Position X': agent.positions[0, step - 1],
             'Position Y': agent.positions[1, step - 1],
@@ -108,7 +113,7 @@ def save_nn_to_csv(step: int, time: float, agents: List["Agent"]) -> None:
         
         _get_csv_writer(nn_file_path, headers, step)
 
-        row_data: dict[str, Any] = {
+        row_data: Dict[str, Any] = {
             'Time': time,
             'Learning Rate Spectral Norm': np.max(eigvals),
             'Function Approximation Error Norm': np.linalg.norm(agent.neural_network_output - agent.target.velocities[0, step - 1]),

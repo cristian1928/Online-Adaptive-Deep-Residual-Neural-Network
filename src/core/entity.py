@@ -1,31 +1,32 @@
 import numpy as np
+from numpy.typing import NDArray
 from typing import Dict, Any, Callable, Union, cast
 from ..simulation import dynamics
 from ..simulation.integrate import integrate_step
 from .neural_network import NeuralNetwork
 
 class Entity:
-    def __init__(self, initial_position: np.ndarray, time_steps: int, config: Dict[str, Any]) -> None:
+    def __init__(self, initial_position: NDArray[np.float_], time_steps: int, config: Dict[str, Any]) -> None:
         self.num_states: int = config['num_states']
         self.time_step_delta: float = config['time_step_delta']
-        self.positions: np.ndarray = np.zeros((self.num_states, time_steps))
-        self.velocities: np.ndarray = np.zeros((self.num_states, time_steps))
+        self.positions: NDArray[np.float_] = np.zeros((self.num_states, time_steps))
+        self.velocities: NDArray[np.float_] = np.zeros((self.num_states, time_steps))
         self.positions[:, 0] = initial_position
 
 class Agent(Entity):
-    def __init__(self, initial_position: np.ndarray, time_steps: int, config: Dict[str, Any], target: "Target", agent_type: str) -> None:
+    def __init__(self, initial_position: NDArray[np.float_], time_steps: int, config: Dict[str, Any], target: "Target", agent_type: str) -> None:
         super().__init__(initial_position, time_steps, config)
         self.target: "Target" = target
         self.agent_type: str = agent_type
         self.k1: float = config['k1']
-        self.control_output: np.ndarray = np.zeros(self.num_states)
+        self.control_output: NDArray[np.float_] = np.zeros(self.num_states)
 
-        self.tracking_error: np.ndarray = np.zeros(self.num_states)
+        self.tracking_error: NDArray[np.float_] = np.zeros(self.num_states)
 
         self.neural_network: NeuralNetwork = NeuralNetwork(self._input_func, config)
-        self.neural_network_output: np.ndarray = np.zeros(self.num_states)
+        self.neural_network_output: NDArray[np.float_] = np.zeros(self.num_states)
 
-    def _input_func(self, step: int) -> np.ndarray: 
+    def _input_func(self, step: int) -> NDArray[np.float_]: 
         return self.target.positions[:, step - 1]
 
     def compute_control_output(self, step: int) -> None:
@@ -40,20 +41,20 @@ class Agent(Entity):
         self.control_output = self.k1*self.tracking_error + self.neural_network_output
 
     def update_dynamics(self, step: int) -> None: 
-        def control_wrapper(t: float, y: Union[np.ndarray, float]) -> Union[np.ndarray, float]:
+        def control_wrapper(t: float, y: Union[NDArray[np.float_], float]) -> Union[NDArray[np.float_], float]:
             return self.control_output
         result = integrate_step(self.positions[:, step - 1], step, self.time_step_delta, control_wrapper)
-        self.positions[:, step] = cast(np.ndarray, result)
+        self.positions[:, step] = cast(NDArray[np.float_], result)
 
 class Target(Entity):
-    def __init__(self, initial_position: np.ndarray, time_steps: int, config: Dict[str, Any]) -> None:
+    def __init__(self, initial_position: NDArray[np.float_], time_steps: int, config: Dict[str, Any]) -> None:
         super().__init__(initial_position, time_steps, config)
         dynamics_type = config.get('dynamics_type', 'trophic_dynamics')
-        self.dynamics_function: Callable[[np.ndarray], np.ndarray] = dynamics.get_dynamics_function(dynamics_type)
+        self.dynamics_function: Callable[[NDArray[np.float_]], NDArray[np.float_]] = dynamics.get_dynamics_function(dynamics_type)
         
     def update_dynamics(self, step: int) -> None: 
-        def dynamics_wrapper(t: float, pos: Union[np.ndarray, float]) -> Union[np.ndarray, float]:
+        def dynamics_wrapper(t: float, pos: Union[NDArray[np.float_], float]) -> Union[NDArray[np.float_], float]:
             pos_array = np.asarray(pos)
             return self.dynamics_function(pos_array)
         result = integrate_step(self.positions[:, step - 1], step, self.time_step_delta, dynamics_wrapper)
-        self.positions[:, step] = cast(np.ndarray, result)
+        self.positions[:, step] = cast(NDArray[np.float_], result)

@@ -202,4 +202,4 @@ def animate() -> FuncAnimation:
 def results() -> None:
     """Generate all results plots and visualizations."""
     plot_from_csv()
-    #animate()
+    animate()
