@@ -1,0 +1,2 @@
+[console_scripts]
+online-adaptive-resnet = online_adaptive_resnet.cli.main:main

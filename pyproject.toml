@@ -1,3 +1,43 @@
+[build-system]
+requires = ["setuptools>=64", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "online-adaptive-resnet"
+version = "1.0.0"
+description = "Online Adaptive Deep Residual Neural Network for Dynamical Systems"
+readme = "README.md"
+license = {text = "AGPL-3.0"}
+authors = [
+    {name = "Cristian F. Nino", email = "cristian1928@ufl.edu"},
+]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Intended Audience :: Science/Research",
+    "License :: OSI Approved :: GNU Affero General Public License v3",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.12",
+    "Topic :: Scientific/Engineering :: Artificial Intelligence",
+]
+requires-python = ">=3.12"
+dependencies = [
+    "numpy",
+    "scipy",
+    "matplotlib",
+    "pandas",
+    "scienceplots",
+]
+
+[project.scripts]
+online-adaptive-resnet = "online_adaptive_resnet.cli.main:main"
+
+[project.urls]
+Homepage = "https://github.com/cristian1928/Online-Adaptive-Deep-Residual-Neural-Network"
+Repository = "https://github.com/cristian1928/Online-Adaptive-Deep-Residual-Neural-Network"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
 [tool.black]
 line-length = 100
 target-version = ['py312']
