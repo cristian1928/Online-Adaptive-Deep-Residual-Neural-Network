@@ -30,9 +30,8 @@ def _jit_vector_norm(x: jnp.ndarray) -> jnp.ndarray:
     """JIT-compiled Frobenius norm computation."""
     return jnp.linalg.norm(x, 'fro')  # type: ignore[no-any-return]
 
-@jax.jit  
 def _jit_eye_with_scaling(size: int, beta: float) -> jnp.ndarray:
-    """JIT-compiled identity matrix with scaling."""
+    """Identity matrix with scaling (not JIT-compiled due to dynamic size)."""
     return beta * jnp.eye(size)
 
 
