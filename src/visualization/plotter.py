@@ -1,10 +1,11 @@
 import os
+from typing import Any, List, Tuple, cast
+
+import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
-import matplotlib.pyplot as plt
 from matplotlib.animation import FuncAnimation
 from matplotlib.lines import Line2D
-from typing import Tuple, List, Any, cast
 
 # Constants for data access
 DATA_DIR = 'simulation_data'

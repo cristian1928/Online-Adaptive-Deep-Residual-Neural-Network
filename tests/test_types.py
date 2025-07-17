@@ -1,6 +1,7 @@
-from pathlib import Path
 import subprocess
 import sys
+from pathlib import Path
+
 
 def test_type_hints_are_clean() -> None:
     """Fail if `mypy --strict` reports any type issues."""

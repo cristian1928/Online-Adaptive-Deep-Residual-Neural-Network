@@ -1,0 +1,20 @@
+[tool.ruff]
+line-length = 100  # More lenient for complex type annotations
+target-version = "py312"
+
+[tool.ruff.lint]
+# Enable common linting rules
+select = ["E", "F", "I", "N"]
+
+# Ignore line length for now as the main focus was type hints
+ignore = ["E501"]
+
+# Allow mathematical variable names in specific modules
+[tool.ruff.lint.per-file-ignores]
+# Scientific/mathematical modules can use mathematical notation
+"src/simulation/dynamics.py" = ["N806"]  # Allow mathematical variable names
+"src/core/neural_network.py" = ["N803"]  # Allow mathematical parameter names (Theta, etc.)
+
+[tool.mypy]
+strict = true
+python_version = "3.12"

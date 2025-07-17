@@ -9,14 +9,14 @@ from pathlib import Path
 from unittest.mock import patch
 
 import matplotlib
+
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 
 sys.path.insert(0, Path(__file__).resolve().parent.parent.as_posix())
 
-from src.io import data_manager
 from main import run_simulation
-
+from src.io import data_manager
 
 TEST_CONFIG = {
     "final_time": 0.1,

@@ -1,9 +1,10 @@
-import os
-import numpy as np
 import csv
+import os
 from collections import defaultdict
-from typing import List, Dict, Any, TextIO, TYPE_CHECKING
 from csv import DictWriter
+from typing import TYPE_CHECKING, Any, Dict, List, TextIO
+
+import numpy as np
 
 if TYPE_CHECKING:
     from src.core.entity import Agent, Target
