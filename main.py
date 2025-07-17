@@ -1,13 +1,18 @@
-import numpy as np
-import json
-from numpy.typing import NDArray
-from typing import Dict, Any, List
-from src.core.entity import Agent, Target
-from src.io.data_manager import save_nn_to_csv, save_state_to_csv, close_all_files
-from src.visualization.plotter import results
-from src.simulation import dynamics
+from __future__ import annotations
 
-def run_simulation(config: Dict[str, Any]) -> None:
+import json
+from typing import Any
+
+import numpy as np
+from numpy.typing import NDArray
+
+from src.core.entity import Agent, Target
+from src.io.data_manager import close_all_files, save_nn_to_csv, save_state_to_csv
+from src.simulation import dynamics
+from src.visualization.plotter import results
+
+
+def run_simulation(config: dict[str, Any]) -> None:
     # Setup simulation parameters
     final_time: float = config['final_time']
     time_step_delta: float = config['time_step_delta']
@@ -16,16 +21,21 @@ def run_simulation(config: Dict[str, Any]) -> None:
     np.random.seed(config['seed'])
 
     if 'target_initial_conditions' in config:
-        target_position: NDArray[np.float64] = np.array(config['target_initial_conditions'])
+        target_position: NDArray[np.floating[Any]] = np.array(
+            config['target_initial_conditions']
+        )
     else: 
-        target_position = np.array(dynamics.get_initial_conditions(config.get('dynamics_type', 'trophic_dynamics')))
+        dynamics_type = config.get('dynamics_type', 'trophic_dynamics')
+        target_position = np.array(
+            dynamics.get_initial_conditions(dynamics_type)
+        )
     
     target: Target = Target(target_position, time_steps, config)
 
     # Initialize agent
-    agent_position: NDArray[np.float64] = np.zeros(num_states)
+    agent_position: NDArray[np.floating[Any]] = np.zeros(num_states)
     agent: Agent = Agent(agent_position, time_steps, config, target, config['ID'])
-    agents: List[Agent] = [agent]
+    agents: list[Agent] = [agent]
 
     # Main simulation loop
     for step in range(1, time_steps):
@@ -47,12 +57,12 @@ def run_simulation(config: Dict[str, Any]) -> None:
     print("\nSimulation completed.")
     close_all_files()
 
-def run_simulation_with_results(config: Dict[str, Any]) -> None:
+def run_simulation_with_results(config: dict[str, Any]) -> None:
     """Run simulation and generate plots/animations."""
     run_simulation(config)
     results()
 
 if __name__ == "__main__":
     with open('config.json', 'r') as config_file: 
-        config: Dict[str, Any] = json.load(config_file)
+        config: dict[str, Any] = json.load(config_file)
     run_simulation_with_results(config)

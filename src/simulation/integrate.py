@@ -1,7 +1,9 @@
-from scipy.integrate import solve_ivp
+from typing import Callable, Union
+
 import numpy as np
 from numpy.typing import NDArray
-from typing import Callable, Union
+from scipy.integrate import solve_ivp
+
 
 def integrate_step(
     state: Union[NDArray[np.float64], float], 

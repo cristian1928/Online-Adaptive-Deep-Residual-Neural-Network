@@ -5,16 +5,16 @@ reference values for step 0 of a tiny deterministic network.
 Any element‑wise deviation > 1 e‑6 fails the test.
 """
 
-from numpy.typing import NDArray
-from pathlib import Path
 import sys
+from pathlib import Path
+
 import numpy as np
+from numpy.typing import NDArray
 
 # make the project root importable
 sys.path.insert(0, Path(__file__).resolve().parent.parent.as_posix())
 
 from src.core.neural_network import NeuralNetwork
-
 
 # ---------------------------------------------------------------------------
 # Reference network configuration

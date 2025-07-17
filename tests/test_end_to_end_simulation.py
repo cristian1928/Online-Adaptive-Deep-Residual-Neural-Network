@@ -8,18 +8,18 @@ import tempfile
 from pathlib import Path
 from unittest.mock import patch
 
+import matplotlib
 import numpy as np
 import pandas as pd
-import matplotlib
+
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 
 # make the package root importable
 sys.path.insert(0, Path(__file__).resolve().parent.parent.as_posix())
 
-from src.io import data_manager
 from main import run_simulation
-
+from src.io import data_manager
 
 REFERENCE_CONFIG = {
     "final_time": 10,
