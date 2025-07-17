@@ -2,10 +2,13 @@ import os
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
-from mpl_toolkits.mplot3d import Axes3D
+from mpl_toolkits.mplot3d import Axes3D  # type: ignore
 import matplotlib as mpl
 from matplotlib.animation import FuncAnimation
-import scienceplots
+from matplotlib.axes import Axes
+from matplotlib.lines import Line2D
+import scienceplots  # type: ignore
+from typing import Tuple, List, Any, cast
 
 # Constants for data access
 DATA_DIR = 'simulation_data'
@@ -13,7 +16,7 @@ STATE_DATA_SUFFIX = '_state_data.csv'
 NN_DATA_SUFFIX = '_nn_data.csv'
 TARGET_FILE = f'{DATA_DIR}/target_state_data.csv'
 
-def configure_plot():
+def configure_plot() -> None:
     """Configure matplotlib for IEEE standard plotting."""
     plt.style.use(['science', 'ieee'])
     plt.rcParams['figure.dpi'] = 100
@@ -29,7 +32,7 @@ def configure_plot():
         'legend.edgecolor': 'black',
     })
 
-def get_simulation_data():
+def get_simulation_data() -> Tuple[List[str], List[pd.DataFrame], pd.DataFrame]:
     """Load simulation state data from CSV files."""
     csv_state_files = [f for f in os.listdir(DATA_DIR) if f.endswith(STATE_DATA_SUFFIX) and not f.startswith('target')]
     csv_state_files.sort()
@@ -38,7 +41,7 @@ def get_simulation_data():
     target_state_data = pd.read_csv(TARGET_FILE)
     return agent_types, agents_state_data, target_state_data
 
-def get_nn_data():
+def get_nn_data() -> Tuple[List[str], List[pd.DataFrame]]:
     """Load neural network data from CSV files."""
     csv_nn_files = [f for f in os.listdir(DATA_DIR) if f.endswith(NN_DATA_SUFFIX)]
     csv_nn_files.sort()
@@ -46,7 +49,7 @@ def get_nn_data():
     agents_nn_data = [pd.read_csv(os.path.join(DATA_DIR, f)) for f in csv_nn_files]
     return agent_types, agents_nn_data
 
-def plot_from_csv():
+def plot_from_csv() -> None:
     """Generate all plots from CSV simulation data."""
     configure_plot()
     agent_types, agents_state_data, target_state_data = get_simulation_data()
@@ -72,15 +75,22 @@ def plot_from_csv():
 
     # ─── Spatial Trajectories over Time ───
     fig = plt.figure(figsize=(8, 6))
-    ax  = fig.add_subplot(111, projection='3d')
+    ax = fig.add_subplot(111, projection='3d')
     for i, pos in enumerate(agents_state_data):
-        ax.plot(pos['Position X'].values, pos['Position Y'].values, pos['Position Z'].values, label=agent_types[i].title(), linestyle='--', color='blue')
-    ax.plot(target_state_data['Position X'], target_state_data['Position Y'], target_state_data['Position Z'], label='Target Trajectory', linestyle='--', color='black')
+        x_vals = cast(Any, pos['Position X'].values)
+        y_vals = cast(Any, pos['Position Y'].values) 
+        z_vals = cast(Any, pos['Position Z'].values)
+        ax.plot(x_vals, y_vals, z_vals, label=agent_types[i].title(), linestyle='--', color='blue')
+    
+    target_x = cast(Any, target_state_data['Position X'])
+    target_y = cast(Any, target_state_data['Position Y'])
+    target_z = cast(Any, target_state_data['Position Z'])
+    ax.plot(target_x, target_y, target_z, label='Target Trajectory', linestyle='--', color='black')
     ax.set_xlabel('X Position (m)')
     ax.set_ylabel('Y Position (m)')
-    ax.set_zlabel('Z Position (m)')
+    ax.set_zlabel('Z Position (m)')  # type: ignore[attr-defined]
     ax.legend(loc='best', fontsize=12, frameon=True, edgecolor='black')
-    ax.set_box_aspect((1, 1, 1))
+    ax.set_box_aspect((1, 1, 1))  # type: ignore[arg-type]
     plt.tight_layout()
 
     # ─── Neural Network Weights ───
@@ -123,7 +133,7 @@ def plot_from_csv():
 
     plt.show() 
 
-def animate():
+def animate() -> FuncAnimation:
     """Create animated visualization of simulation trajectories."""
     plt.style.use('default')
     agent_types, agents_state_data, target_state_data = get_simulation_data()
@@ -132,7 +142,7 @@ def animate():
     ax = fig.add_subplot(111, projection='3d')
     ax.set_xlabel('X Position (m)')
     ax.set_ylabel('Y Position (m)')
-    ax.set_zlabel('Z Position (m)')
+    ax.set_zlabel('Z Position (m)')  # type: ignore[attr-defined]
 
     # Find data bounds for consistent scaling
     position_data = agents_state_data + [target_state_data]
@@ -144,10 +154,11 @@ def animate():
     x_range, y_range, z_range = x_max - x_min, y_max - y_min, z_max - z_min
     ax.set_xlim(x_min - margin * x_range, x_max + margin * x_range)
     ax.set_ylim(y_min - margin * y_range, y_max + margin * y_range)
-    ax.set_zlim(z_min - margin * z_range, z_max + margin * z_range)
+    ax.set_zlim(z_min - margin * z_range, z_max + margin * z_range)  # type: ignore[attr-defined]
 
     # Initialize lines and points
-    agent_lines, agent_points = [], []
+    agent_lines: List[Line2D] = []
+    agent_points: List[Line2D] = []
     for i, agent_data in enumerate(agents_state_data):
         line, = ax.plot([], [], [], '-', label=f'{agent_types[i].title()}')
         point, = ax.plot([], [], [], 'o', markersize=6)
@@ -159,11 +170,11 @@ def animate():
 
     legend = ax.legend(loc='upper right', prop={'size': 7})
     legend.get_frame().set_linewidth(0.5)
-    time_text = ax.text2D(0.02, 0.95, '', transform=ax.transAxes)
+    time_text = ax.text2D(0.02, 0.95, '', transform=ax.transAxes)  # type: ignore[attr-defined]
 
     trail_length = 3500
 
-    def update(frame):
+    def update(frame: int) -> List[Any]:
         current_time = target_state_data['Time'][frame]
         time_text.set_text(f'Time: {current_time:.2f} s')
     
@@ -171,14 +182,14 @@ def animate():
 
         for i, data in enumerate(agents_state_data):
             agent_lines[i].set_data(data['Position X'][start_idx:frame+1], data['Position Y'][start_idx:frame+1])
-            agent_lines[i].set_3d_properties(data['Position Z'][start_idx:frame+1])
+            agent_lines[i].set_3d_properties(data['Position Z'][start_idx:frame+1])  # type: ignore[attr-defined]
             agent_points[i].set_data([data['Position X'][frame]], [data['Position Y'][frame]])
-            agent_points[i].set_3d_properties([data['Position Z'][frame]])
+            agent_points[i].set_3d_properties([data['Position Z'][frame]])  # type: ignore[attr-defined]
 
         target_line.set_data(target_state_data['Position X'][start_idx:frame+1], target_state_data['Position Y'][start_idx:frame+1])
-        target_line.set_3d_properties(target_state_data['Position Z'][start_idx:frame+1])
+        target_line.set_3d_properties(target_state_data['Position Z'][start_idx:frame+1])  # type: ignore[attr-defined]
         target_point.set_data([target_state_data['Position X'][frame]], [target_state_data['Position Y'][frame]])
-        target_point.set_3d_properties([target_state_data['Position Z'][frame]])
+        target_point.set_3d_properties([target_state_data['Position Z'][frame]])  # type: ignore[attr-defined]
 
         return agent_lines + agent_points + [target_line, target_point, time_text]
 
@@ -188,7 +199,7 @@ def animate():
     plt.show()
     return FuncAnimation(fig, update, frames=range(0, num_frames, max(1, num_frames//200)), blit=False, interval=75)
 
-def results():
+def results() -> None:
     """Generate all results plots and visualizations."""
     plot_from_csv()
     #animate()

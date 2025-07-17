@@ -47,7 +47,7 @@ EXPECTED_RMS = 10.183_180_465_618_477
 TOL = 1e-6
 
 
-def test_end_to_end_simulation_tracking_error():
+def test_end_to_end_simulation_tracking_error() -> None:
     """Run the reference simulation and verify the RMS tracking‑error norm."""
     with tempfile.TemporaryDirectory() as tmp:
         orig_cwd = Path.cwd()
