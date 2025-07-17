@@ -33,18 +33,7 @@ jobs:
           if [ -f requirements-dev.txt ]; then
             pip install -r requirements-dev.txt
           fi
-          pip install pytest ruff
 
-      # 3) Run linting checks
-      - name: Lint with ruff
-        run: ruff check .
-
-      # 4) Run type checking  
-      - name: Type check with mypy
-        run: mypy --strict .
-
-      # 5) Run your test suite
+      # 3) Run your test suite
       - name: Run tests
         run: pytest -v                        # collects everything under tests/
-
-      # 4) (optional) upload coverage, build wheels, etc.

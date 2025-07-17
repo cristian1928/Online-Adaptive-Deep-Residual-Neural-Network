@@ -5,11 +5,7 @@ from numpy.typing import NDArray
 from scipy.integrate import solve_ivp
 
 
-def integrate_step(
-    state: Union[NDArray[np.float64], float], 
-    step: int, 
-    dt: float, 
-    derivative: Callable[[float, Union[NDArray[np.float64], float]], Union[NDArray[np.float64], float]]
+def integrate_step(state: Union[NDArray[np.float64], float], step: int, dt: float, derivative: Callable[[float, Union[NDArray[np.float64], float]], Union[NDArray[np.float64], float]]
 ) -> Union[NDArray[np.float64], float]:
     orig_shape = np.shape(state)
     y0 = np.asarray(state).ravel()

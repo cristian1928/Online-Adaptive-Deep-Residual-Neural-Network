@@ -10,11 +10,7 @@ from ..simulation.integrate import integrate_step
 
 
 class NeuralNetwork:
-    def __init__(
-        self, 
-        input_func: Callable[[int], NDArray[np.floating[Any]]], 
-        config: dict[str, Any]
-    ) -> None:
+    def __init__(self, input_func: Callable[[int], NDArray[np.floating[Any]]], config: dict[str, Any]) -> None:
         self.time_step_delta: float = config['time_step_delta']
         self.time_steps: int = int(config['final_time'] / self.time_step_delta)
         self.input_func: Callable[[int], NDArray[np.floating[Any]]] = input_func
@@ -28,9 +24,7 @@ class NeuralNetwork:
         self.num_outputs: int = config['output_size']
         self.weight_bounds: float = config['weight_bounds']        
         self.initialize_weights()
-        self.neural_network_gradient_wrt_weights: (
-            NDArray[np.floating[Any]] | None
-        ) = None
+        self.neural_network_gradient_wrt_weights: (NDArray[np.floating[Any]] | None) = None
         max_lr = config['maximum_learning_rate']
         min_lr = config['minimum_learning_rate']
         self.beta_1: float = (max_lr * min_lr**3) / (max_lr**2 - min_lr**2)
@@ -39,54 +33,27 @@ class NeuralNetwork:
 
         initial_lr = config['initial_learning_rate']
         eye_matrix = np.eye(np.size(self.weights))
-        self.learning_rate: NDArray[np.floating[Any]] = (
-            (initial_lr * eye_matrix)[None, :, :].repeat(self.time_steps, axis=0)
-        )
+        self.learning_rate: NDArray[np.floating[Any]] = ((initial_lr * eye_matrix)[None, :, :].repeat(self.time_steps, axis=0))
 
     def initialize_weights(self) -> None:
-        activation_to_variance: dict[str, int] = {
-            'tanh': 1, 'sigmoid': 1, 'identity': 1, 
-            'swish': 2, 'relu': 2, 'leaky_relu': 2
-        }
-        inner_variance = activation_to_variance[
-            self.inner_layer_activation_function
-        ]
-        output_variance = activation_to_variance[
-            self.outer_layer_activation_function
-        ]
+        activation_to_variance: dict[str, int] = {'tanh': 1, 'sigmoid': 1, 'identity': 1, 'swish': 2, 'relu': 2, 'leaky_relu': 2}
+        inner_variance = activation_to_variance[self.inner_layer_activation_function]
+        output_variance = activation_to_variance[self.outer_layer_activation_function]
         weights: list[NDArray[np.floating[Any]]] = []
         for block in range(self.num_blocks + 1):
             input_size = self.num_inputs if block == 0 else self.num_outputs
-            weights.append(
-                self.generate_initialized_weights(
-                    input_size, self.num_neurons, inner_variance
-                )
-            )
+            weights.append(self.generate_initialized_weights(input_size, self.num_neurons, inner_variance))
             for _ in range(self.num_layers - 1):
-                weights.append(
-                    self.generate_initialized_weights(
-                        self.num_neurons, self.num_neurons, inner_variance
-                    )
-                )
+                weights.append(self.generate_initialized_weights(self.num_neurons, self.num_neurons, inner_variance))
             weights.append(
-                self.generate_initialized_weights(
-                    self.num_neurons, self.num_outputs, output_variance
-                )
-            )
+                self.generate_initialized_weights(self.num_neurons, self.num_outputs, output_variance))
         self.weights: NDArray[np.floating[Any]] = np.vstack(weights)
 
-    def generate_initialized_weights(
-        self, 
-        input_size: int, 
-        output_size: int, 
-        variance_factor: int
-    ) -> NDArray[np.floating[Any]]:
+    def generate_initialized_weights(self, input_size: int, output_size: int, variance_factor: int) -> NDArray[np.floating[Any]]:
         # Applies either Xavier (1/input) or He (2/input) initialization
         variance = variance_factor / input_size  
         # input_size + 1 accounts for bias term
-        return np.random.normal(
-            0, np.sqrt(variance), output_size * (input_size + 1)
-        ).reshape(-1, 1)
+        return np.random.normal(0, np.sqrt(variance), output_size * (input_size + 1)).reshape(-1, 1)
 
     def get_input_with_bias(self, step: int) -> NDArray[np.floating[Any]]: 
         return np.append(self.input_func(step), 1).reshape(-1, 1)

@@ -4,6 +4,7 @@ from typing import Any, List, Tuple, cast
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
+import scienceplots
 from matplotlib.animation import FuncAnimation
 from matplotlib.lines import Line2D
 

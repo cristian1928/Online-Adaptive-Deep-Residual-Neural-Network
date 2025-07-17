@@ -20,15 +20,10 @@ def run_simulation(config: dict[str, Any]) -> None:
     num_states: int = config['num_states']
     np.random.seed(config['seed'])
 
-    if 'target_initial_conditions' in config:
-        target_position: NDArray[np.floating[Any]] = np.array(
-            config['target_initial_conditions']
-        )
+    if 'target_initial_conditions' in config: target_position: NDArray[np.floating[Any]] = np.array(config['target_initial_conditions'])
     else: 
         dynamics_type = config.get('dynamics_type', 'trophic_dynamics')
-        target_position = np.array(
-            dynamics.get_initial_conditions(dynamics_type)
-        )
+        target_position = np.array(dynamics.get_initial_conditions(dynamics_type))
     
     target: Target = Target(target_position, time_steps, config)
 
@@ -40,10 +35,8 @@ def run_simulation(config: dict[str, Any]) -> None:
     # Main simulation loop
     for step in range(1, time_steps):
         # Update all agents
-        for agent in agents: 
-            agent.compute_control_output(step)
-        for agent in agents: 
-            agent.update_dynamics(step)
+        for agent in agents: agent.compute_control_output(step)
+        for agent in agents: agent.update_dynamics(step)
         target.update_dynamics(step)
 
         # Save data
@@ -63,6 +56,5 @@ def run_simulation_with_results(config: dict[str, Any]) -> None:
     results()
 
 if __name__ == "__main__":
-    with open('config.json', 'r') as config_file: 
-        config: dict[str, Any] = json.load(config_file)
+    with open('config.json', 'r') as config_file: config: dict[str, Any] = json.load(config_file)
     run_simulation_with_results(config)
