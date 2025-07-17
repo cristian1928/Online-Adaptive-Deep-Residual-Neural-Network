@@ -16,15 +16,14 @@ def run_simulation(config: Dict[str, Any]) -> None:
     np.random.seed(config['seed'])
 
     if 'target_initial_conditions' in config:
-        target_position: NDArray[np.float_] = np.array(config['target_initial_conditions'])
+        target_position: NDArray[np.float64] = np.array(config['target_initial_conditions'])
     else: 
         target_position = np.array(dynamics.get_initial_conditions(config.get('dynamics_type', 'trophic_dynamics')))
     
     target: Target = Target(target_position, time_steps, config)
 
     # Initialize agent
-    # --- FIX: Specify the array's data type ---
-    agent_position: NDArray[np.float_] = np.zeros(num_states)
+    agent_position: NDArray[np.float64] = np.zeros(num_states)
     agent: Agent = Agent(agent_position, time_steps, config, target, config['ID'])
     agents: List[Agent] = [agent]
 

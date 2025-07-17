@@ -37,7 +37,7 @@ CONFIG = {
 }
 
 
-def _input(step: int) -> NDArray[np.float_]:
+def _input(step: int) -> NDArray[np.float64]:
     """Fixed input vector κ₀ used in the derivation."""
     return np.array([0.1, -0.5, 0.25])
 
