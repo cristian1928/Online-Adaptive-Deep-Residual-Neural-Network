@@ -32,7 +32,9 @@ The project is organized into a clean, purposeful directory structure:
 ```
 .
 ├── main.py                    # Entry point - simulation runner and orchestration
-├── config.json               # Configuration file for simulation and network parameters
+├── configurations/           # Configuration files for simulation and network parameters
+│   ├── config.json            # Default configuration file
+│   └── *.json                 # Additional configuration files for batch simulations
 ├── requirements.txt           # Python package dependencies
 ├── src/                       # Source code organized by purpose
 │   ├── core/                  # Core logic - neural networks and entities
@@ -73,13 +75,13 @@ The project is organized into a clean, purposeful directory structure:
 
 ## Configuration
 
-The project is driven by a JSON configuration file (`config.json`) that specifies both simulation and network parameters. Below is an overview of the key configuration parameters:
+The project is driven by JSON configuration files placed in the `configurations/` directory. Each configuration file specifies both simulation and network parameters for one agent. Below is an overview of the key configuration parameters:
 
 - **Simulation Parameters:**
   - `final_time`: Total duration of the simulation (e.g., 60 seconds).
   - `time_step_delta`: The simulation time step (e.g., 0.01 seconds).
   - `num_states`: Number of states in the system.
-  - `num_agents`: Number of agents interacting with the system.
+  - `ID`: Unique identifier for the agent (used in output filenames).
 
 - **Neural Network Architecture:**
   - `num_blocks`: Number of residual blocks to use (set to 0 if not using additional residual layers).
@@ -102,7 +104,7 @@ The project is driven by a JSON configuration file (`config.json`) that specifie
   - `weight_bounds`: Maximum allowable magnitude for network weights.
   - `forgetting_factor`: Parameter controlling the rate at which past information is “forgotten” during online learning.
 
-You can modify these parameters to experiment with different simulation settings and network architectures.
+You can modify these parameters to experiment with different simulation settings and network architectures. To run batch simulations with multiple agents, simply add multiple JSON files to the `configurations/` directory.
 
 ## Usage
 
@@ -112,10 +114,20 @@ To run the simulation and begin online adaptive learning, execute the main scrip
 python3 main.py
 ```
 This will:
-- Initialize the system dynamics and network with the parameters specified in config.json.
+- Discover and load all JSON configuration files from the `configurations/` directory.
+- Create one agent for each configuration file.
+- Initialize the system dynamics and networks with the parameters specified in each config.
 - Start the simulation loop where the system state is updated at each time step.
-- Adapt the neural network weights in an online manner.
+- Adapt the neural network weights for each agent in an online manner.
 - Log data via the data manager and update visualizations in real time using the plotter.
+
+### Batch Simulations
+
+The system automatically supports batch simulations:
+- **Single agent**: Place one JSON file in `configurations/` (e.g., `config.json`)
+- **Multiple agents**: Place multiple JSON files in `configurations/` (e.g., `agent1.json`, `agent2.json`, etc.)
+
+Each agent will have its own neural network and generate separate output files based on its `ID` field.
 
 ## License
 
