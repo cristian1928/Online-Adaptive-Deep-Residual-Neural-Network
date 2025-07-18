@@ -29,9 +29,26 @@ def run_simulation_from_configs(configs: list[dict[str, Any]]) -> None:
 
     # Initialize agents from all configurations
     agents: list[Agent] = []
-    for config in configs:
+    used_agent_types: set[str] = set()
+    
+    for i, config in enumerate(configs):
         agent_position: NDArray[np.float64] = np.zeros(num_states)
-        agent: Agent = Agent(agent_position, time_steps, config, target, config['ID'])
+        
+        # Ensure unique agent type to prevent file collisions
+        base_agent_type = config['ID']
+        agent_type = base_agent_type
+        
+        # If this agent type is already used, append index to make it unique
+        if agent_type in used_agent_types:
+            agent_type = f"{base_agent_type}_{i}"
+            
+        # Ensure final uniqueness (handle edge case where appended index also conflicts)
+        while agent_type in used_agent_types:
+            i += 1
+            agent_type = f"{base_agent_type}_{i}"
+        
+        used_agent_types.add(agent_type)
+        agent: Agent = Agent(agent_position, time_steps, config, target, agent_type)
         agents.append(agent)
 
     # Main simulation loop
