@@ -24,7 +24,7 @@ def _leaky_relu(x: NDArray[np.float64]) -> NDArray[np.float64]:
 def _sigmoid(x: NDArray[np.float64]) -> NDArray[np.float64]:
     return 1 / (1 + np.exp(-x))
 
-ACTIVATION_FUNCTIONS = {
+ACTIVATION_FUNCTIONS: dict[str, Callable[[NDArray[np.float64]], NDArray[np.float64]]] = {
     'tanh': np.tanh,
     'swish': _swish,
     'identity': lambda x: x,
@@ -46,11 +46,11 @@ def _sigmoid_derivative(x: NDArray[np.float64]) -> NDArray[np.float64]:
     sigmoid = 1 / (1 + np.exp(-x))
     return sigmoid * (1 - sigmoid)
 
-ACTIVATION_DERIVATIVES = {
-    'tanh': lambda x: 1 - np.tanh(x)**2,
+ACTIVATION_DERIVATIVES: dict[str, Callable[[NDArray[np.float64]], NDArray[np.float64]]] = {
+    'tanh': lambda x: (1 - np.tanh(x)**2).astype(np.float64),
     'swish': _swish_derivative,
     'identity': lambda x: np.ones_like(x),
-    'relu': lambda x: (x > 0).astype(float),
+    'relu': lambda x: (x > 0).astype(np.float64),
     'sigmoid': _sigmoid_derivative,
     'leaky_relu': _leaky_relu_derivative,
 }
@@ -116,9 +116,11 @@ def initialize_learning_rate(config: dict[str, Any], time_steps: int, num_weight
     Returns:
         Initialized learning rate matrix
     """
-    initial_lr = config['initial_learning_rate']
-    eye_matrix = np.eye(num_weights)
-    return ((initial_lr * eye_matrix)[None, :, :].repeat(time_steps, axis=0))
+    initial_lr: float = config['initial_learning_rate']
+    eye_matrix: NDArray[np.float64] = np.eye(num_weights, dtype=np.float64)
+    scaled_matrix: NDArray[np.float64] = initial_lr * eye_matrix
+    expanded_matrix: NDArray[np.float64] = scaled_matrix[None, :, :].repeat(time_steps, axis=0)
+    return expanded_matrix
 
 
 def create_initial_network_state(key: Any, config: dict[str, Any], input_size: int) -> NetworkState:
