@@ -24,16 +24,15 @@ class NeuralNetwork:
         self.num_outputs: int = config['output_size']
         self.weight_bounds: float = config['weight_bounds']        
         self.initialize_weights()
-        self.neural_network_gradient_wrt_weights: (NDArray[np.float64] | None) = None
+        self.neural_network_gradient_wrt_weights: NDArray[np.float64] = np.zeros((self.num_outputs, np.size(self.weights)))
         max_lr = config['maximum_learning_rate']
         min_lr = config['minimum_learning_rate']
-        self.beta_1: float = (max_lr * min_lr**3) / (max_lr**2 - min_lr**2)
-        self.beta_2: float = min_lr
-        self.beta_3: float = (min_lr * max_lr) / (max_lr**2 - min_lr**2)
+        self.alpha: float = (max_lr * min_lr**3) / (max_lr**2 - min_lr**2)
+        self.beta: float = min_lr
+        self.gamma: float = (min_lr * max_lr) / (max_lr**2 - min_lr**2)
 
-        initial_lr = config['initial_learning_rate']
-        eye_matrix = np.eye(np.size(self.weights))
-        self.learning_rate: NDArray[np.float64] = ((initial_lr * eye_matrix)[None, :, :].repeat(self.time_steps, axis=0))
+        initial_lr_matrix = config['initial_learning_rate'] * np.eye(np.size(self.weights))
+        self.learning_rate = np.stack([initial_lr_matrix] * self.time_steps, axis=0)
 
     def initialize_weights(self) -> None:
         activation_to_variance: dict[str, int] = {'tanh': 1, 'sigmoid': 1, 'identity': 1, 'swish': 2, 'relu': 2, 'leaky_relu': 2}
@@ -50,10 +49,8 @@ class NeuralNetwork:
         self.weights: NDArray[np.float64] = np.vstack(weights)
 
     def generate_initialized_weights(self, input_size: int, output_size: int, variance_factor: int) -> NDArray[np.float64]:
-        # Applies either Xavier (1/input) or He (2/input) initialization
-        variance = variance_factor / input_size  
-        # input_size + 1 accounts for bias term
-        return np.random.normal(0, np.sqrt(variance), output_size * (input_size + 1)).reshape(-1, 1)
+        variance = variance_factor / input_size  # Applies either Xavier (1/input) or He (2/input) initialization
+        return np.random.normal(0, np.sqrt(variance), output_size * (input_size + 1)).reshape(-1, 1)    # input_size + 1 accounts for bias term
 
     def get_input_with_bias(self, step: int) -> NDArray[np.float64]: 
         return np.append(self.input_func(step), 1).reshape(-1, 1)
@@ -80,26 +77,21 @@ class NeuralNetwork:
                 activated_layers.append(self.apply_activation_function_and_bias(unactivated_output, activation_function))
         return activated_layers, unactivated_layers
 
-    def perform_backward_propagation(self, activated_layers: list[NDArray[np.float64]], unactivated_layers: list[NDArray[np.float64]], transposed_weight_matrices: list[NDArray[np.float64]], outer_product: NDArray[np.float64] | None = None) -> tuple[NDArray[np.float64], NDArray[np.float64]]:
-            gradient: NDArray[np.float64] | None = None
-            product: NDArray[np.float64] | None = None
-            for layer_index in range(self.num_layers, -1, -1):
-                transposed_output = activated_layers[layer_index].T
-                if layer_index == self.num_layers:
-                    current_gradient: NDArray[np.float64] = np.asarray(np.kron(np.eye(self.num_outputs, dtype=np.float64), transposed_output), dtype=np.float64)
-                    if outer_product is not None: gradient = outer_product @ current_gradient
-                    else: gradient = current_gradient
-                    product = transposed_weight_matrices[layer_index] @ self.apply_activation_function_derivative_and_bias(unactivated_layers[layer_index - 1], self.outer_layer_activation_function)
-                else:
-                    kron_product = np.kron(np.eye(self.num_neurons), transposed_output)
-                    if outer_product is None: layer_gradient = product @ kron_product if product is not None else np.zeros_like(kron_product)
-                    else: layer_gradient = outer_product @ product @ kron_product if product is not None else np.zeros_like(kron_product)
-                    gradient = np.hstack((layer_gradient, gradient)) if gradient is not None else layer_gradient
-                    if layer_index != 0 and product is not None: product = product @ transposed_weight_matrices[layer_index] @ self.apply_activation_function_derivative_and_bias(unactivated_layers[layer_index - 1], self.inner_layer_activation_function)
-            
-            if gradient is None: gradient = np.zeros((1, 1))  # fallback case
-            if product is None: product = np.zeros((1, 1))  # fallback case
-            return gradient, product
+    def perform_backward_propagation(self, activated_layers: list[NDArray[np.float64]], unactivated_layers: list[NDArray[np.float64]], transposed_weight_matrices: list[NDArray[np.float64]], outer_product: NDArray[np.float64]) -> tuple[NDArray[np.float64], NDArray[np.float64]]:
+        transposed_output_last_layer = activated_layers[self.num_layers].T
+        gradient_base = np.kron(np.eye(self.num_outputs), transposed_output_last_layer)
+        last_layer_gradient = outer_product @ gradient_base
+        layer_gradients: list[NDArray[np.float64]] = [last_layer_gradient]
+        product = (transposed_weight_matrices[self.num_layers] @ self.apply_activation_function_derivative_and_bias(unactivated_layers[self.num_layers - 1], self.outer_layer_activation_function))
+        for layer_index in range(self.num_layers - 1, -1, -1):
+            transposed_output = activated_layers[layer_index].T
+            kron_product = np.kron(np.eye(self.num_neurons), transposed_output)
+            hidden_layer_gradient = outer_product @ product @ kron_product
+            layer_gradients.append(hidden_layer_gradient)
+            if layer_index > 0:
+                product = (product @ transposed_weight_matrices[layer_index] @ self.apply_activation_function_derivative_and_bias(unactivated_layers[layer_index - 1], self.inner_layer_activation_function))
+        gradient = np.hstack(list(reversed(layer_gradients)))
+        return gradient, product
 
     def _run_forward_pass(self, step: int) -> tuple[int, NDArray[np.float64], list[list[NDArray[np.float64]]], list[list[NDArray[np.float64]]], list[list[NDArray[np.float64]]]]:
         weight_index = 0
@@ -119,29 +111,19 @@ class NeuralNetwork:
         return weight_index, neural_network_output, activated_layers_blocks, unactivated_layers_blocks, transposed_weights_blocks
 
     def _run_backward_pass(self, activated_layers_blocks: list[list[NDArray[np.float64]]], unactivated_layers_blocks: list[list[NDArray[np.float64]]], transposed_weights_blocks: list[list[NDArray[np.float64]]]) -> NDArray[np.float64]:
-        outer_product: NDArray[np.float64] | None = None
-        total_gradient: NDArray[np.float64] | None = None
+        outer_product: NDArray[np.float64] = np.eye(self.num_outputs)
+        gradient_blocks: list[NDArray[np.float64]] = []
         for block_index in range(self.num_blocks, -1, -1):
-            current_outer_product = outer_product if block_index < self.num_blocks else None
-            block_gradient, inner_product = self.perform_backward_propagation(activated_layers_blocks[block_index], unactivated_layers_blocks[block_index], transposed_weights_blocks[block_index], current_outer_product)
-            if block_index == self.num_blocks: 
-                total_gradient = block_gradient
-            else: 
-                total_gradient = np.hstack((block_gradient, total_gradient)) if total_gradient is not None else block_gradient
+            block_gradient, inner_product = self.perform_backward_propagation(activated_layers_blocks[block_index], unactivated_layers_blocks[block_index], transposed_weights_blocks[block_index], outer_product)
+            gradient_blocks.append(block_gradient)
+
             if block_index > 0:
-                block_output = sum(unactivated_layers_blocks[i][-1] for i in range(block_index))
-                if isinstance(block_output, (int, float)):
-                    # Convert scalar to array for compatibility with activation function
-                    block_output = np.array([[block_output]])
+                block_output = sum((unactivated_layers_blocks[i][-1] for i in range(block_index)), start=np.array(0.0))
                 preactivation_derivative = self.apply_activation_function_derivative_and_bias(block_output, self.shortcut_activation_function)
                 update_term = inner_product @ transposed_weights_blocks[block_index][0] @ preactivation_derivative
-                if block_index == self.num_blocks: 
-                    outer_product = np.eye(self.num_outputs) + update_term
-                else: 
-                    outer_product = outer_product @ (np.eye(self.num_outputs) + update_term) if outer_product is not None else np.eye(self.num_outputs) + update_term
+                outer_product = outer_product @ (np.eye(self.num_outputs) + update_term)
         
-        if total_gradient is None:
-            total_gradient = np.zeros((1, 1))  # fallback case
+        total_gradient = np.hstack(list(reversed(gradient_blocks)))
         return total_gradient
 
     def predict(self, step: int) -> NDArray[np.float64]:
@@ -165,42 +147,43 @@ class NeuralNetwork:
         return neural_network_output
 
     def jacobian_raw(self, step: int) -> NDArray[np.float64]:
-        _, neural_network_output, activated_layers_blocks, unactivated_layers_blocks, transposed_weights_blocks = self._run_forward_pass(step)
+        _, _, activated_layers_blocks, unactivated_layers_blocks, transposed_weights_blocks = self._run_forward_pass(step)
         total_gradient = self._run_backward_pass(activated_layers_blocks, unactivated_layers_blocks, transposed_weights_blocks)
         return total_gradient
 
     def update_learning_rate(self, step: int) -> None:
-        def learning_rate_deriv(t: float, gamma: NDArray[np.float64] | float) -> NDArray[np.float64] | float:
-            gamma_arr = np.asarray(gamma)
-            if self.neural_network_gradient_wrt_weights is None:
-                return np.zeros_like(gamma_arr)
-            normalized_neural_network_gradient_wrt_weights = self.neural_network_gradient_wrt_weights / (1.0 + np.linalg.norm(self.neural_network_gradient_wrt_weights.T @ self.neural_network_gradient_wrt_weights, 'fro')**2)
-            mat = normalized_neural_network_gradient_wrt_weights @ gamma_arr
-            result = - mat.T @ mat + (self.beta_1 * np.eye(gamma_arr.shape[0])) + (self.beta_2 * gamma_arr) - (self.beta_3 * gamma_arr @ gamma_arr)
-            return result if isinstance(gamma, np.ndarray) else float(result)
-        
-        new_lr = integrate_step(self.learning_rate[step - 1], step, self.time_step_delta, learning_rate_deriv)
-        self.learning_rate[step] = np.asarray(new_lr)
+    
+        def learning_rate_dynamics(t: float, learning_rate: NDArray[np.float64]) -> NDArray[np.float64]:
+            normalized_regressor = self.neural_network_gradient_wrt_weights / np.linalg.norm(self.neural_network_gradient_wrt_weights, 2)
+            product = normalized_regressor @ learning_rate
+            least_square_term = product.T @ product
+            forgetting_term = self.alpha * np.size(self.weights) + self.beta*learning_rate - self.gamma* learning_rate @ learning_rate
+            result = -least_square_term + forgetting_term
+            return result
+    
+        new_lr = integrate_step(self.learning_rate[step - 1], step, self.time_step_delta, learning_rate_dynamics)
+        self.learning_rate[step] = new_lr
 
     def update_neural_network_weights(self, step: int, loss: NDArray[np.float64]) -> None:
-        def weights_deriv(t: float, weights: NDArray[np.float64] | float) -> NDArray[np.float64] | float:
-            weights_arr = np.asarray(weights)
-            if self.neural_network_gradient_wrt_weights is None:
-                return np.zeros_like(weights_arr)
+        def weights_deriv(t: float, weights: NDArray[np.float64]) -> NDArray[np.float64]:
             weight_derivative = self.learning_rate[step] @ (self.neural_network_gradient_wrt_weights.T @ loss)
-            projected_weights = self.proj(weight_derivative, weights_arr, self.weight_bounds)
-            return projected_weights if isinstance(weights, np.ndarray) else float(projected_weights)
+            projected_weights = self.proj(weight_derivative, weights, self.weight_bounds)
+            return projected_weights
         
         new_weights = integrate_step(self.weights, step, self.time_step_delta, weights_deriv)
-        self.weights = np.asarray(new_weights)
+        self.weights = new_weights
 
     def proj(self, Theta: NDArray[np.float64], thetaHat: NDArray[np.float64], thetaBar: float) -> NDArray[np.float64]:
-        max_term = max(0.0, (np.dot(thetaHat.T, thetaHat)).item() - thetaBar**2)
-        dot_term = (np.dot(thetaHat.T, Theta)).item()
-        numerator = max_term**2 * (dot_term + np.sqrt(dot_term**2 + 1.0)) * thetaHat
+        dot_term: np.float64 = np.dot(thetaHat.T, Theta)
+        max_term_val: np.float64 = np.dot(thetaHat.T, thetaHat) - thetaBar**2
+        max_term: np.float64 = np.maximum(0.0, max_term_val)
+        sqrt_argument: np.float64 = dot_term**2 + 1.0
+        sqrt_result: np.float64 = np.sqrt(sqrt_argument)
+        scalar_multiplier: np.float64 = max_term**2 * (dot_term + sqrt_result)
+        numerator = scalar_multiplier * thetaHat
         denominator = 2.0 * (1.0 + 2.0 * thetaBar)**2 * thetaBar**2
         result = Theta - (numerator / denominator)
-        return np.asarray(result)
+        return result
 
     @staticmethod
     def apply_activation_function_and_bias(x: NDArray[np.float64], activation_function: str) -> NDArray[np.float64]:

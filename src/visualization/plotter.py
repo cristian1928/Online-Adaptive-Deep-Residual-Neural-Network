@@ -129,75 +129,8 @@ def plot_from_csv() -> None:
         ax.set_ylabel('Neural Network Output $(m/s^2)$')
         plt.tight_layout()
 
-    plt.show() 
-
-def animate() -> FuncAnimation:
-    """Create animated visualization of simulation trajectories."""
-    plt.style.use('default')
-    agent_types, agents_state_data, target_state_data = get_simulation_data()
-
-    fig = plt.figure()
-    ax = fig.add_subplot(111, projection='3d')
-    ax.set_xlabel('X Position (m)')
-    ax.set_ylabel('Y Position (m)')
-    ax.set_zlabel('Z Position (m)')  # type: ignore[attr-defined]
-
-    # Find data bounds for consistent scaling
-    position_data = agents_state_data + [target_state_data]
-    x_min, x_max = min(data['Position X'].min() for data in position_data), max(data['Position X'].max() for data in position_data)
-    y_min, y_max = min(data['Position Y'].min() for data in position_data), max(data['Position Y'].max() for data in position_data)
-    z_min, z_max = min(data['Position Z'].min() for data in position_data), max(data['Position Z'].max() for data in position_data)
-
-    margin = 0.1
-    x_range, y_range, z_range = x_max - x_min, y_max - y_min, z_max - z_min
-    ax.set_xlim(x_min - margin * x_range, x_max + margin * x_range)
-    ax.set_ylim(y_min - margin * y_range, y_max + margin * y_range)
-    ax.set_zlim(z_min - margin * z_range, z_max + margin * z_range)  # type: ignore[attr-defined]
-
-    # Initialize lines and points
-    agent_lines: List[Line2D] = []
-    agent_points: List[Line2D] = []
-    for i, agent_data in enumerate(agents_state_data):
-        line, = ax.plot([], [], [], '-', label=f'{agent_types[i].title()}')
-        point, = ax.plot([], [], [], 'o', markersize=6)
-        agent_lines.append(line)
-        agent_points.append(point)
-
-    target_line, = ax.plot([], [], [], '--', label='Target')
-    target_point, = ax.plot([], [], [], 'o', markersize=6, color='red')
-
-    legend = ax.legend(loc='upper right', prop={'size': 7})
-    legend.get_frame().set_linewidth(0.5)
-    time_text = ax.text2D(0.02, 0.95, '', transform=ax.transAxes)  # type: ignore[attr-defined]
-
-    trail_length = 3500
-
-    def update(frame: int) -> List[Any]:
-        current_time = target_state_data['Time'][frame]
-        time_text.set_text(f'Time: {current_time:.2f} s')
-    
-        start_idx = max(0, frame - trail_length)
-
-        for i, data in enumerate(agents_state_data):
-            agent_lines[i].set_data(data['Position X'][start_idx:frame+1], data['Position Y'][start_idx:frame+1])
-            agent_lines[i].set_3d_properties(data['Position Z'][start_idx:frame+1])  # type: ignore[attr-defined]
-            agent_points[i].set_data([data['Position X'][frame]], [data['Position Y'][frame]])
-            agent_points[i].set_3d_properties([data['Position Z'][frame]])  # type: ignore[attr-defined]
-
-        target_line.set_data(target_state_data['Position X'][start_idx:frame+1], target_state_data['Position Y'][start_idx:frame+1])
-        target_line.set_3d_properties(target_state_data['Position Z'][start_idx:frame+1])  # type: ignore[attr-defined]
-        target_point.set_data([target_state_data['Position X'][frame]], [target_state_data['Position Y'][frame]])
-        target_point.set_3d_properties([target_state_data['Position Z'][frame]])  # type: ignore[attr-defined]
-
-        return agent_lines + agent_points + [target_line, target_point, time_text]
-
-    num_frames = len(target_state_data)
-
-    plt.tight_layout()
     plt.show()
-    return FuncAnimation(fig, update, frames=range(0, num_frames, max(1, num_frames//200)), blit=False, interval=75)
 
 def results() -> None:
     """Generate all results plots and visualizations."""
     plot_from_csv()
-    animate()

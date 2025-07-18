@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from collections.abc import Callable
-from typing import Any, cast
+from typing import Any
 
 import numpy as np
 from numpy.typing import NDArray
@@ -45,10 +45,10 @@ class Agent(Entity):
         self.control_output = self.k1*self.tracking_error + self.neural_network_output
 
     def update_dynamics(self, step: int) -> None: 
-        def control_wrapper(t: float, y: NDArray[np.float64] | float) -> NDArray[np.float64] | float:
+        def control_wrapper(t: float, y: NDArray[np.float64]) -> NDArray[np.float64]:
             return self.control_output
         result = integrate_step(self.positions[:, step - 1], step, self.time_step_delta, control_wrapper)
-        self.positions[:, step] = cast(NDArray[np.float64], result)
+        self.positions[:, step] = result
 
 class Target(Entity):
     def __init__(self, initial_position: NDArray[np.float64], time_steps: int, config: dict[str, Any]) -> None:
@@ -57,8 +57,7 @@ class Target(Entity):
         self.dynamics_function: Callable[[NDArray[np.float64]], NDArray[np.float64]] = dynamics.get_dynamics_function(dynamics_type)
         
     def update_dynamics(self, step: int) -> None: 
-        def dynamics_wrapper(t: float, pos: NDArray[np.float64] | float) -> NDArray[np.float64] | float:
-            pos_array = np.asarray(pos)
-            return self.dynamics_function(pos_array)
+        def dynamics_wrapper(t: float, pos: NDArray[np.float64]) -> NDArray[np.float64]:
+            return self.dynamics_function(pos)
         result = integrate_step(self.positions[:, step - 1], step, self.time_step_delta, dynamics_wrapper)
-        self.positions[:, step] = cast(NDArray[np.float64], result)
+        self.positions[:, step] = result
