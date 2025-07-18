@@ -9,18 +9,18 @@
     "target_initial_conditions": [40, 9, 2],
     "dynamics_type": "trophic_dynamics",
 
-    "ID": "Residual Neural Network",
+    "ID": "Shallow Neural Network",
     "output_size": 3,
-    "num_blocks": 4,
-    "num_layers": 2,
-    "num_neurons": 2,
+    "num_blocks": 0,
+    "num_layers": 1,
+    "num_neurons": 8,
     "inner_activation": "swish",
     "output_activation": "tanh",
     "shortcut_activation": "swish",
 
-    "minimum_learning_rate": 0.01,
+    "minimum_singular_value": 0.01,
     "initial_learning_rate": 1,
-    "maximum_learning_rate": 8,
+    "maximum_singular_value": 8,
 
     "weight_bounds": 4,
 

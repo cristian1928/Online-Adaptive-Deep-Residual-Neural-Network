@@ -29,9 +29,9 @@ CONFIG = {
     "inner_activation": "swish",
     "output_activation": "tanh",
     "shortcut_activation": "tanh",
-    "minimum_learning_rate": 0.01,
+    "minimum_singular_value": 0.01,
     "initial_learning_rate": 1.0,
-    "maximum_learning_rate": 8.0,
+    "maximum_singular_value": 8.0,
     "weight_bounds": 4.0,
 }
 

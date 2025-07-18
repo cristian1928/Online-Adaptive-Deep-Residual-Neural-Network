@@ -33,16 +33,15 @@ class Agent(Entity):
     def _input_func(self, step: int) -> NDArray[np.float64]: return self.target.positions[:, step - 1]
 
     def compute_control_output(self, step: int) -> None:
-        # Compute tracking error
         self.tracking_error = (self.target.positions[:, step - 1] - self.positions[:, step - 1])
+        self.control_output = self.k1*self.tracking_error
 
-        # Neural network update
+        if self.agent_type == "Proportional": return
+
         loss = self.tracking_error
         nn_output = self.neural_network.train_step(step, loss.reshape(-1, 1))
         self.neural_network_output = nn_output.reshape(-1)
-
-        # Compute Controller
-        self.control_output = self.k1*self.tracking_error + self.neural_network_output
+        self.control_output += self.neural_network_output
 
     def update_dynamics(self, step: int) -> None: 
         def control_wrapper(t: float, y: NDArray[np.float64]) -> NDArray[np.float64]:
