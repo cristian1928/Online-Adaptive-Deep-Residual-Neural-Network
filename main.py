@@ -81,11 +81,24 @@ def load_configurations() -> list[dict[str, Any]]:
     if not config_files:
         raise FileNotFoundError(f"No JSON configuration files found in '{config_dir}'")
     
+    # Load baseline configuration if it exists
+    baseline_file = config_dir / "config_baseline.json"
+    baseline_config = {}
+    if baseline_file.exists():
+        with open(baseline_file, 'r') as f:
+            baseline_config = json.load(f)
+    
     configs = []
     for config_file in sorted(config_files):  # Sort for consistent ordering
+        # Skip the baseline config as it's already loaded
+        if config_file.name == "config_baseline.json":
+            continue
+            
         with open(config_file, 'r') as f:
             config = json.load(f)
-            configs.append(config)
+            # Merge baseline config with specific config (specific config takes precedence)
+            merged_config = {**baseline_config, **config}
+            configs.append(merged_config)
     
     return configs
 

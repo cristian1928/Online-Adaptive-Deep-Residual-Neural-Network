@@ -66,6 +66,49 @@ REFERENCE_CONFIG_2 = {
     "k1": 1,
 }
 
+# Baseline config for testing baseline functionality
+BASELINE_CONFIG = {
+    "final_time": 5,
+    "time_step_delta": 0.001,
+    "seed": 0,
+    "num_states": 3,
+    "control_size": 3,
+    "dynamics_type": "trophic_dynamics",
+}
+
+# Minimal agent configs that will be merged with baseline
+MINIMAL_CONFIG_1 = {
+    "ID": "Agent_1",
+    "output_size": 3,
+    "num_blocks": 1,
+    "num_layers": 1,
+    "num_neurons": 1,
+    "inner_activation": "swish",
+    "output_activation": "tanh",
+    "shortcut_activation": "swish",
+    "minimum_singular_value": 0.01,
+    "initial_learning_rate": 1,
+    "maximum_singular_value": 8,
+    "weight_bounds": 2,
+    "k1": 1,
+}
+
+MINIMAL_CONFIG_2 = {
+    "ID": "Agent_2",
+    "output_size": 3,
+    "num_blocks": 1,
+    "num_layers": 1,
+    "num_neurons": 1,
+    "inner_activation": "swish",
+    "output_activation": "tanh",
+    "shortcut_activation": "swish",
+    "minimum_singular_value": 0.01,
+    "initial_learning_rate": 1,
+    "maximum_singular_value": 8,
+    "weight_bounds": 2,
+    "k1": 1,
+}
+
 
 def test_load_configurations_single_config() -> None:
     """Test loading a single configuration file."""
@@ -116,6 +159,84 @@ def test_load_configurations_multiple_configs() -> None:
             # Should be sorted by filename
             assert configs[0]["ID"] == "Agent_1"
             assert configs[1]["ID"] == "Agent_2"
+            
+        finally:
+            os.chdir(orig_cwd)
+
+
+def test_load_configurations_with_baseline() -> None:
+    """Test loading configurations with baseline config merging."""
+    with tempfile.TemporaryDirectory() as tmp:
+        orig_cwd = Path.cwd()
+        try:
+            os.chdir(tmp)
+            
+            # Create configurations directory with baseline and specific configs
+            config_dir = Path("configurations")
+            config_dir.mkdir()
+            
+            # Create baseline config
+            baseline_file = config_dir / "config_baseline.json"
+            with open(baseline_file, "w") as f:
+                json.dump(BASELINE_CONFIG, f)
+            
+            # Create minimal configs that should be merged with baseline
+            config_file1 = config_dir / "config1.json"
+            with open(config_file1, "w") as f:
+                json.dump(MINIMAL_CONFIG_1, f)
+                
+            config_file2 = config_dir / "config2.json"
+            with open(config_file2, "w") as f:
+                json.dump(MINIMAL_CONFIG_2, f)
+            
+            configs = load_configurations()
+            
+            assert len(configs) == 2
+            
+            # Verify configs have merged baseline parameters
+            for config in configs:
+                assert config["final_time"] == 5
+                assert config["time_step_delta"] == 0.001
+                assert config["seed"] == 0
+                assert config["num_states"] == 3
+                assert config["control_size"] == 3
+                assert config["dynamics_type"] == "trophic_dynamics"
+            
+            # Verify specific agent parameters
+            assert configs[0]["ID"] == "Agent_1"
+            assert configs[1]["ID"] == "Agent_2"
+            
+        finally:
+            os.chdir(orig_cwd)
+
+
+def test_load_configurations_no_baseline() -> None:
+    """Test loading configurations without baseline config (backward compatibility)."""
+    with tempfile.TemporaryDirectory() as tmp:
+        orig_cwd = Path.cwd()
+        try:
+            os.chdir(tmp)
+            
+            # Create configurations directory with full configs (no baseline)
+            config_dir = Path("configurations")
+            config_dir.mkdir()
+            
+            config_file1 = config_dir / "config1.json"
+            with open(config_file1, "w") as f:
+                json.dump(REFERENCE_CONFIG_1, f)
+                
+            config_file2 = config_dir / "config2.json"
+            with open(config_file2, "w") as f:
+                json.dump(REFERENCE_CONFIG_2, f)
+            
+            configs = load_configurations()
+            
+            assert len(configs) == 2
+            assert configs[0]["ID"] == "Agent_1"
+            assert configs[1]["ID"] == "Agent_2"
+            # Verify all parameters are present even without baseline
+            assert configs[0]["final_time"] == 5
+            assert configs[0]["time_step_delta"] == 0.001
             
         finally:
             os.chdir(orig_cwd)
