@@ -176,7 +176,7 @@ def test_load_configurations_with_baseline() -> None:
             config_dir.mkdir()
             
             # Create baseline config
-            baseline_file = config_dir / "config_baseline.json"
+            baseline_file = config_dir / "config_common.json"
             with open(baseline_file, "w") as f:
                 json.dump(BASELINE_CONFIG, f)
             

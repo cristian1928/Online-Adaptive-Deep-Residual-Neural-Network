@@ -15,12 +15,6 @@ from src.visualization.plotter import results
 
 
 def run_simulation_from_configs(configs: list[dict[str, Any]]) -> None:
-    """Run simulation with multiple agent configurations."""
-    if not configs:
-        raise ValueError("At least one configuration is required")
-    
-    # Use the first config for global simulation parameters
-    # (all configs should have the same simulation parameters)
     base_config = configs[0]
     
     # Setup simulation parameters
@@ -29,10 +23,8 @@ def run_simulation_from_configs(configs: list[dict[str, Any]]) -> None:
     time_steps: int = int(final_time / time_step_delta)
     num_states: int = base_config['num_states']
     np.random.seed(base_config['seed'])
-
     dynamics_type = base_config['dynamics_type']
     target_position = np.array(dynamics.get_initial_conditions(dynamics_type))
-    
     target: Target = Target(target_position, time_steps, base_config)
 
     # Initialize agents from all configurations
@@ -61,49 +53,29 @@ def run_simulation_from_configs(configs: list[dict[str, Any]]) -> None:
     close_all_files()
 
 def run_simulation(config: dict[str, Any]) -> None:
-    """Run simulation with a single configuration (backward compatibility)."""
     run_simulation_from_configs([config])
 
 def run_simulation_with_results(config: dict[str, Any]) -> None:
-    """Run simulation and generate plots/animations."""
     run_simulation(config)
     results()
 
 def load_configurations() -> list[dict[str, Any]]:
-    """Load all configuration files from the configurations/ directory."""
     config_dir = Path("configurations")
-    
-    if not config_dir.exists():
-        raise FileNotFoundError(f"Configuration directory '{config_dir}' does not exist")
-    
     config_files = list(config_dir.glob("*.json"))
-    
-    if not config_files:
-        raise FileNotFoundError(f"No JSON configuration files found in '{config_dir}'")
-    
-    # Load baseline configuration if it exists
-    baseline_file = config_dir / "config_baseline.json"
+    baseline_file = config_dir / "config_common.json"
     baseline_config = {}
     if baseline_file.exists():
-        with open(baseline_file, 'r') as f:
-            baseline_config = json.load(f)
-    
+        with open(baseline_file, 'r') as f: baseline_config = json.load(f)
     configs = []
-    for config_file in sorted(config_files):  # Sort for consistent ordering
-        # Skip the baseline config as it's already loaded
-        if config_file.name == "config_baseline.json":
-            continue
-            
+    for config_file in sorted(config_files):
+        if config_file.name == "config_common.json": continue    
         with open(config_file, 'r') as f:
             config = json.load(f)
-            # Merge baseline config with specific config (specific config takes precedence)
             merged_config = {**baseline_config, **config}
             configs.append(merged_config)
-    
     return configs
 
 def run_batch_simulation_with_results() -> None:
-    """Load all configurations and run simulation with results."""
     configs = load_configurations()
     run_simulation_from_configs(configs)
     results()
