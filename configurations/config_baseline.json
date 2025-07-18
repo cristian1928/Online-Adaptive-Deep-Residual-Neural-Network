@@ -1,0 +1,8 @@
+{
+    "final_time": 60,
+    "time_step_delta": 0.001,
+    "seed": 0,
+    "num_states": 3,
+    "control_size": 3,
+    "dynamics_type": "trophic_dynamics"
+}
