@@ -46,17 +46,19 @@ class Agent(Entity):
     def update_dynamics(self, step: int) -> None: 
         def control_wrapper(t: float, y: NDArray[np.float64]) -> NDArray[np.float64]:
             return self.control_output
+        self.velocities[:, step] = self.control_output
         result = integrate_step(self.positions[:, step - 1], step, self.time_step_delta, control_wrapper)
         self.positions[:, step] = result
 
 class Target(Entity):
     def __init__(self, initial_position: NDArray[np.float64], time_steps: int, config: dict[str, Any]) -> None:
         super().__init__(initial_position, time_steps, config)
-        dynamics_type = config.get('dynamics_type', 'trophic_dynamics')
+        dynamics_type = config['dynamics_type']
         self.dynamics_function: Callable[[NDArray[np.float64]], NDArray[np.float64]] = dynamics.get_dynamics_function(dynamics_type)
         
     def update_dynamics(self, step: int) -> None: 
         def dynamics_wrapper(t: float, pos: NDArray[np.float64]) -> NDArray[np.float64]:
             return self.dynamics_function(pos)
+        self.velocities[:, step] = self.dynamics_function(self.positions[:, step - 1])
         result = integrate_step(self.positions[:, step - 1], step, self.time_step_delta, dynamics_wrapper)
         self.positions[:, step] = result

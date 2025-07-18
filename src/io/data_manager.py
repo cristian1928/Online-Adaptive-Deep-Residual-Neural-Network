@@ -101,7 +101,6 @@ def save_nn_to_csv(step: int, time: float, agents: List["Agent"]) -> None:
             float_weights = [float(w) for w in weights]
 
         learning_rate_matrix = agent.neural_network.learning_rate[step]
-        eigvals = np.real(np.linalg.eigvals(learning_rate_matrix))
 
         nn_file_path = f'{DATA_DIR}/{agent.agent_type}{NN_DATA_SUFFIX}'
 
@@ -113,11 +112,11 @@ def save_nn_to_csv(step: int, time: float, agents: List["Agent"]) -> None:
         ] + [f'Weight_{j + 1}' for j in range(len(float_weights))]
         
         _get_csv_writer(nn_file_path, headers, step)
-
+        
         row_data: Dict[str, Any] = {
             'Time': time,
-            'Learning Rate Spectral Norm': np.max(eigvals),
-            'Function Approximation Error Norm': np.linalg.norm(agent.neural_network_output - agent.target.velocities[0, step - 1]),
+            'Learning Rate Spectral Norm': np.linalg.norm(learning_rate_matrix, 2),
+            'Function Approximation Error Norm': np.linalg.norm(agent.neural_network_output - agent.target.velocities[:, step - 1]),
             'Neural Network Output': np.linalg.norm(agent.neural_network_output)
         }
         row_data.update({f'Weight_{j + 1}': w for j, w in enumerate(float_weights)})

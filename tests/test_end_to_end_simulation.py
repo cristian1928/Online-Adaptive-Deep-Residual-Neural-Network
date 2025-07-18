@@ -27,7 +27,6 @@ REFERENCE_CONFIG = {
     "seed": 0,
     "num_states": 3,
     "control_size": 3,
-    "target_initial_conditions": [40, 9, 2],
     "dynamics_type": "trophic_dynamics",
     "ID": "Residual Neural Network",
     "output_size": 3,

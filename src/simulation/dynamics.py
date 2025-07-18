@@ -85,7 +85,7 @@ def get_initial_conditions(dynamics_type: str) -> List[float]:
         "attitude_mrp": [0.25, 0.10, -0.30],  # Modified Rodrigues Parameters (||r|| < 1)
         "chua": [0.2, 0.0, 0.0],  # Chua circuit initial conditions
         "trophic_dynamics": [40, 9, 2],  # Ecological food-chain model (H, P, T)
-        "custom": [0.0, 0.0, 0.0]  # Default for custom dynamics
+        "custom": [0.0, 0.0, 0.0]  # Change based on custom dynamics
     }
     
     return initial_conditions_map[dynamics_type]

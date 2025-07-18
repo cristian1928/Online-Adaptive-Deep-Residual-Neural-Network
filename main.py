@@ -20,10 +20,8 @@ def run_simulation(config: dict[str, Any]) -> None:
     num_states: int = config['num_states']
     np.random.seed(config['seed'])
 
-    if 'target_initial_conditions' in config: target_position: NDArray[np.float64] = np.array(config['target_initial_conditions'])
-    else: 
-        dynamics_type = config.get('dynamics_type', 'trophic_dynamics')
-        target_position = np.array(dynamics.get_initial_conditions(dynamics_type))
+    dynamics_type = config['dynamics_type']
+    target_position = np.array(dynamics.get_initial_conditions(dynamics_type))
     
     target: Target = Target(target_position, time_steps, config)
 
