@@ -63,6 +63,23 @@ def trophic_dynamics(state: NDArray[np.float64]) -> NDArray[np.float64]:
     T_dot = -d_T * T + a_PT * P * T
     return np.array([H_dot, P_dot, T_dot])
 
+# =======================================================
+# Charged particle velocity in a magnetic field
+# =======================================================
+def charged_particle_motion(state: NDArray[np.float64]) -> NDArray[np.float64]:
+    # Initial conditions: vx=0.1, vy=1.0, vz=0.5 (velocity components m/s)
+    vx, vy, vz = state
+    # Parameters
+    q_over_m = 1.6     # charge-to-mass ratio (C/kg)
+    B_field  = np.array([0.0, 0.0, 2.0])  # constant magnetic field (Tesla)
+    
+    # Lorentz force: F = q * (v x B)  -->  a = (q/m) * (v x B)
+    v_vector   = np.array([vx, vy, vz])
+    accel      = q_over_m * np.cross(v_vector, B_field)
+    
+    # vx_dot, vy_dot, vz_dot are the components of acceleration
+    return accel
+
 def custom(state: NDArray[np.float64]) -> NDArray[np.float64]:
     return np.zeros_like(state)
 
@@ -75,6 +92,7 @@ def get_dynamics_function(dynamics_type: str) -> Callable[[NDArray[np.float64]],
         "attitude_mrp": attitude_mrp,
         "chua": chua,
         "trophic_dynamics": trophic_dynamics,
+        "charged_particle_motion": charged_particle_motion,
         "custom": custom
     }
     
@@ -85,6 +103,7 @@ def get_initial_conditions(dynamics_type: str) -> List[float]:
         "attitude_mrp": [0.25, 0.10, -0.30],  # Modified Rodrigues Parameters (||r|| < 1)
         "chua": [0.2, 0.0, 0.0],  # Chua circuit initial conditions
         "trophic_dynamics": [40, 9, 2],  # Ecological food-chain model (H, P, T)
+        "charged_particle_motion": [0.1, 1.0, 0.5], # Particle velocity (vx, vy, vz) in m/s
         "custom": [0.0, 0.0, 0.0]  # Change based on custom dynamics
     }
     
