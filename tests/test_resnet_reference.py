@@ -21,6 +21,7 @@ from src.core.neural_network import NeuralNetwork
 # ---------------------------------------------------------------------------
 CONFIG = {
     "time_step_delta": 0.001,
+    "seed": 0,
     "final_time": 1.0,
     "num_blocks": 2,
     "num_layers": 1,

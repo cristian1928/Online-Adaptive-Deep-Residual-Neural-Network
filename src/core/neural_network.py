@@ -22,7 +22,8 @@ class NeuralNetwork:
         self.num_neurons: int = config['num_neurons']
         self.num_inputs: int = input_func(1).shape[0]
         self.num_outputs: int = config['output_size']
-        self.weight_bounds: float = config['weight_bounds']        
+        self.weight_bounds: float = config['weight_bounds'] 
+        np.random.seed(config['seed'])
         self.initialize_weights()
         self.neural_network_gradient_wrt_weights: NDArray[np.float64] = np.zeros((self.num_outputs, np.size(self.weights)))
         mu_min = config['minimum_singular_value']
@@ -30,7 +31,6 @@ class NeuralNetwork:
         self.alpha: float = (mu_max * mu_min**3) / (mu_max**2 - mu_min**2)
         self.beta: float = mu_min
         self.gamma: float = (mu_min * mu_max) / (mu_max**2 - mu_min**2)
-
         initial_lr_matrix = config['initial_learning_rate'] * np.eye(np.size(self.weights))
         self.learning_rate = np.stack([initial_lr_matrix] * self.time_steps, axis=0)
 
