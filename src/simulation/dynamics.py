@@ -1,110 +1,114 @@
+from __future__ import annotations
+
 from typing import Callable, Dict, List
 
 import numpy as np
 from numpy.typing import NDArray
 
-
-# =================================================
-# Attitude kinematics in Modified Rodrigues Parameters
-# =================================================
+# ---------------------------------------------------------------------
 def attitude_mrp(state: NDArray[np.float64]) -> NDArray[np.float64]:
+    """
+    Rigid-body attitude kinematics in Modified Rodrigues Parameters.
+
+    State vector
+        r : np.ndarray, shape (3,)  -- Modified Rodrigues Parameters, unitless
+
+    Returns
+        r_dot : np.ndarray, shape (3,)  -- time derivative of r, 1/s
+    """
+
     def _skew(v: NDArray[np.float64]) -> NDArray[np.float64]:
+        """Return the 3x3 skew-symmetric matrix of vector v (rad/s)."""
         x, y, z = v
-        return np.array([[ 0, -z,  y], [ z,  0, -x], [-y,  x,  0]])
+        return np.array([[0.0, -z, y],
+                         [z, 0.0, -x],
+                         [-y, x, 0.0]])
 
-    # Initial conditions:  r = [0.25, 0.10, -0.30]   (‖r‖ < 1)
-    r = state
-    r2 = np.dot(r, r)
-    B  = (1 - r2)*np.eye(3) + 2*_skew(r) + 2*np.outer(r, r)
+    r: NDArray[np.float64] = state
+    r_sq: float = float(np.dot(r, r))
+    b_mat: NDArray[np.float64] = (1.0 - r_sq) * np.eye(3) + 2.0 * _skew(r) + 2.0 * np.outer(r, r)
 
-    # constant body torque  → almost-constant angular momentum
-    J      = np.diag([2.0, 1.2, 1.6])        # inertia tensor (kg·m²)
-    tau_b  = np.array([0.0, 0.15, 0.0])      # body torque (N·m)
-    omega  = np.linalg.inv(J) @ tau_b        # angular velocity (rad/s)
+    j_inertia: NDArray[np.float64] = np.diag([2.0, 1.2, 1.6])             # kg·m^2
+    tau_body: NDArray[np.float64] = np.array([0.0, 0.15, 0.0])            # N·m
+    omega_body: NDArray[np.float64] = np.linalg.inv(j_inertia) @ tau_body  # rad/s
 
-    r_dot = 0.5 * B @ omega
-    return np.asarray(r_dot)
+    r_dot: NDArray[np.float64] = 0.5 * b_mat @ omega_body
+    return r_dot
 
-# ================================================
-# Chua double-scroll chaotic circuit (dimensionless)
-# ================================================
+# ---------------------------------------------------------------------
 def chua(state: NDArray[np.float64]) -> NDArray[np.float64]:
-    # Initial conditions:  x = 0.2,  y = 0.0,  z = 0.0
+    """
+    Dimensionless Chua double-scroll circuit.
+
+    State vector
+        x : capacitor voltage proxy, unitless
+        y : capacitor voltage proxy, unitless
+        z : inductor current proxy, unitless
+    """
+
     x, y, z = state
-    α  = 15.6
-    β  = 28.0
-    m0 = -1.143
-    m1 = -0.714
+    alpha: float = 15.6          # unitless
+    beta: float = 28.0           # unitless
+    m0: float = -1.143           # unitless
+    m1: float = -0.714           # unitless
 
-    # piece-wise linear Chua diode
-    g = m1*x + 0.5*(m0 - m1)*(abs(x + 1) - abs(x - 1))
+    g: float = m1 * x + 0.5 * (m0 - m1) * (abs(x + 1.0) - abs(x - 1.0))
 
-    x_dot = α * (y - x - g)
-    y_dot = x - y + z
-    z_dot = -β * y
-    return np.array([x_dot, y_dot, z_dot])
+    x_dot: float = alpha * (y - x - g)
+    y_dot: float = x - y + z
+    z_dot: float = -beta * y
+    return np.array([x_dot, y_dot, z_dot], dtype=np.float64)
 
-# =======================================================
-# Three-tier ecological food-chain model
-# =======================================================
+# ---------------------------------------------------------------------
 def trophic_dynamics(state: NDArray[np.float64]) -> NDArray[np.float64]:
-    # Initial conditions:  H=40, P=9, T=2   (population counts or biomass units)
-    H, P, T = state
-    # Parameters
-    r_H   = 0.6     # prey intrinsic growth
-    K     = 100.0   # prey carrying capacity
-    a_HP  = 0.02    # predation rate (H→P)
-    a_PT  = 0.01    # predation rate (P→T)
-    d_P   = 0.3     # predator natural death
-    d_T   = 0.1     # top-predator death
+    """
+    Three-tier ecological food chain.
 
-    H_dot = r_H * H * (1 - H / K) - a_HP * H * P
-    P_dot = -d_P * P + a_HP * H * P - a_PT * P * T
-    T_dot = -d_T * T + a_PT * P * T
-    return np.array([H_dot, P_dot, T_dot])
+    State vector
+        H : prey (herbivore) population, individuals
+        P : predator population, individuals
+        T : top-predator population, individuals
+    """
 
-# =======================================================
-# Charged particle velocity in a magnetic field
-# =======================================================
-def charged_particle_motion(state: NDArray[np.float64]) -> NDArray[np.float64]:
-    # Initial conditions: vx=0.1, vy=1.0, vz=0.5 (velocity components m/s)
-    vx, vy, vz = state
-    # Parameters
-    q_over_m = 1.6     # charge-to-mass ratio (C/kg)
-    B_field  = np.array([0.0, 0.0, 2.0])  # constant magnetic field (Tesla)
-    
-    # Lorentz force: F = q * (v x B)  -->  a = (q/m) * (v x B)
-    v_vector   = np.array([vx, vy, vz])
-    accel      = q_over_m * np.cross(v_vector, B_field)
-    
-    # vx_dot, vy_dot, vz_dot are the components of acceleration
-    return accel
+    h_pop, p_pop, t_pop = state
+    r_h: float = 0.6               # 1/day
+    k_cap: float = 100.0           # individuals
+    a_hp: float = 0.02             # 1/(individual·day)
+    a_pt: float = 0.01             # 1/(individual·day)
+    d_p: float = 0.3               # 1/day
+    d_t: float = 0.1               # 1/day
 
+    h_dot: float = r_h * h_pop * (1.0 - h_pop / k_cap) - a_hp * h_pop * p_pop
+    p_dot: float = -d_p * p_pop + a_hp * h_pop * p_pop - a_pt * p_pop * t_pop
+    t_dot: float = -d_t * t_pop + a_pt * p_pop * t_pop
+    return np.array([h_dot, p_dot, t_dot], dtype=np.float64)
+
+# ---------------------------------------------------------------------
 def custom(state: NDArray[np.float64]) -> NDArray[np.float64]:
-    return np.zeros_like(state)
+    """
+    Placeholder user-defined dynamics.
+    Returns a zero derivative of the same shape.
+    """
+    return np.zeros_like(state, dtype=np.float64)
 
-# =======================================================
-# Dynamics mapping and configuration system
-# =======================================================
-
+# ---------------------------------------------------------------------
 def get_dynamics_function(dynamics_type: str) -> Callable[[NDArray[np.float64]], NDArray[np.float64]]:
+    """Return the dynamics function associated with `dynamics_type`."""
     dynamics_map: Dict[str, Callable[[NDArray[np.float64]], NDArray[np.float64]]] = {
         "attitude_mrp": attitude_mrp,
         "chua": chua,
         "trophic_dynamics": trophic_dynamics,
-        "charged_particle_motion": charged_particle_motion,
-        "custom": custom
+        "custom": custom,
     }
-    
     return dynamics_map[dynamics_type]
 
+# ---------------------------------------------------------------------
 def get_initial_conditions(dynamics_type: str) -> List[float]:
+    """Return a list of reasonable initial conditions for the chosen model."""
     initial_conditions_map: Dict[str, List[float]] = {
-        "attitude_mrp": [0.25, 0.10, -0.30],  # Modified Rodrigues Parameters (||r|| < 1)
-        "chua": [0.2, 0.0, 0.0],  # Chua circuit initial conditions
-        "trophic_dynamics": [40, 9, 2],  # Ecological food-chain model (H, P, T)
-        "charged_particle_motion": [0.1, 1.0, 0.5], # Particle velocity (vx, vy, vz) in m/s
-        "custom": [0.0, 0.0, 0.0]  # Change based on custom dynamics
+        "attitude_mrp": [0.25, 0.10, -0.30],      # unitless
+        "chua": [0.2, 0.0, 0.0],                  # unitless
+        "trophic_dynamics": [40.0, 9.0, 2.0],     # individuals
+        "custom": [0.0, 0.0, 0.0],
     }
-    
     return initial_conditions_map[dynamics_type]

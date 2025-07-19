@@ -1,10 +1,10 @@
 {
-    "final_time": 30,
+    "final_time": 90,
     "time_step_delta": 0.001,
     "seed": 0,
     "num_states": 3,
     "control_size": 3,
-    "dynamics_type": "charged_particle_motion",
+    "dynamics_type": "trophic_dynamics",
     "output_size": 3,
     "inner_activation": "swish",
     "output_activation": "tanh",

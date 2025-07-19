@@ -32,7 +32,7 @@ The project is organized into a clean, purposeful directory structure:
 ```
 .
 ├── main.py                    # Entry point - simulation runner and orchestration
-├── configurations/           # Configuration files for simulation and network parameters
+├── configurations/            # Configuration files for simulation and network parameters
 │   ├── config.json            # Default configuration file
 │   └── *.json                 # Additional configuration files for batch simulations
 ├── requirements.txt           # Python package dependencies
