@@ -1,6 +1,6 @@
 {
-    "final_time": 60,
-    "time_step_delta": 0.001,
+    "final_time": 5,
+    "time_step_delta": 0.01,
     "seed": 0,
     "num_states": 3,
     "control_size": 3,

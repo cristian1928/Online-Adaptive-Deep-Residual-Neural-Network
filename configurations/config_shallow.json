@@ -1,0 +1,6 @@
+{
+    "ID": "shallow",
+    "num_blocks": 1,
+    "num_layers": 1,
+    "num_neurons": 1
+}

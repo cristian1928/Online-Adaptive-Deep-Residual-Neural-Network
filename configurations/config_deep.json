@@ -1,6 +1,6 @@
 {
-    "ID": "Residual Neural Netwokr",
-    "num_blocks": 4,
-    "num_layers": 2,
-    "num_neurons": 2
+    "ID": "deep",
+    "num_blocks": 6,
+    "num_layers": 3,
+    "num_neurons": 4
 }
