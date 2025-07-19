@@ -4,4 +4,4 @@
 *.pyo
 *.pyd
 /.pytest_cache
-src/.DS_Storexwxx
+src/.DS_Store
