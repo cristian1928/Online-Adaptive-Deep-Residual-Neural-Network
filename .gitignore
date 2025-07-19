@@ -1,7 +1,7 @@
-/.DS_Store
 /simulation_data
 /__pycache__
 *.pyc
 *.pyo
 *.pyd
 /.pytest_cache
+src/.DS_Storexwxx

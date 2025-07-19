@@ -22,17 +22,7 @@ class NeuralNetwork:
         self.num_neurons: int = config['num_neurons']
         self.num_inputs: int = input_func(1).shape[0]
         self.num_outputs: int = config['output_size']
-        self.weight_bounds: float = config['weight_bounds']
-        
-        # Create a deterministic random number generator for this neural network
-        # Use the configuration's ID and global seed to ensure deterministic but unique initialization
-        base_seed = config.get('seed', 0)
-        agent_id = config.get('ID', 'default')
-        # Create a hash-based seed from the agent ID to ensure different agents get different but deterministic seeds
-        import hashlib
-        id_hash = int(hashlib.md5(agent_id.encode()).hexdigest()[:8], 16)
-        self.rng = np.random.RandomState(base_seed + id_hash)
-        
+        self.weight_bounds: float = config['weight_bounds']        
         self.initialize_weights()
         self.neural_network_gradient_wrt_weights: NDArray[np.float64] = np.zeros((self.num_outputs, np.size(self.weights)))
         mu_min = config['minimum_singular_value']
@@ -60,7 +50,7 @@ class NeuralNetwork:
 
     def generate_initialized_weights(self, input_size: int, output_size: int, variance_factor: int) -> NDArray[np.float64]:
         variance = variance_factor / input_size  # Applies either Xavier (1/input) or He (2/input) initialization
-        return self.rng.normal(0, np.sqrt(variance), output_size * (input_size + 1)).reshape(-1, 1)    # input_size + 1 accounts for bias term
+        return np.random.normal(0, np.sqrt(variance), output_size * (input_size + 1)).reshape(-1, 1)    # input_size + 1 accounts for bias term
 
     def get_input_with_bias(self, step: int) -> NDArray[np.float64]: 
         return np.append(self.input_func(step), 1).reshape(-1, 1)
