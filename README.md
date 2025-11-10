@@ -6,7 +6,7 @@ A Python-based implementation of an online adaptive deep neural network with res
 
 ### Prerequisites
 
-- Python 3.11 or higher
+- Python 3.14 or higher
 - All dependencies listed in `requirements.txt`
 
 ### Installation
@@ -28,7 +28,7 @@ A Python-based implementation of an online adaptive deep neural network with res
 
 3. Install the required dependencies:
    ```bash
-   pip install -r requirements.txt -r requirements-dev.txt
+   pip install -r requirements.txt
    ```
 
 ### Running the Simulation
